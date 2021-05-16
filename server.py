@@ -10,9 +10,9 @@ players = []
 users = {}
 
 # Application codes
-SUCCESS = '101'
-NO_USRNAME = '102'
-WRONG_PASSWD = '103'
+LOGIN_SUCCESS = '100'
+LOGIN_ERR_INCORRECT = '101'
+LOGIN_ERR_ALREADY_LOGGED_IN = '102'
 
 
 def worker_thread(c):
@@ -27,23 +27,27 @@ def worker_thread(c):
         received_msg = data.decode('utf-8')
         received_msg = json.loads(received_msg)
 
-        if received_msg['code'] == '100':
+        if received_msg['code'] == '10':
             return_code = login_authenticator(
                 received_msg['username'], received_msg['password'])
             reply_msg = json.dumps({'code': return_code})
-
-        print(reply_msg)
+            print(reply_msg)
 
         c.sendall(str.encode(reply_msg))
 
 
 def login_authenticator(username, password):
     global users
-    if username not in users.keys():
-        return NO_USRNAME
-    if password != users[username]:
-        return WRONG_PASSWD
-    return SUCCESS
+    if username not in users.keys() or password != users[username]['password']:
+        print("Username or password is incorrect")
+        return LOGIN_ERR_INCORRECT
+
+    if users[username]['logged-in']:
+        print("User has already logged in")
+        return LOGIN_ERR_ALREADY_LOGGED_IN
+
+    users[username]['logged-in'] = True
+    return LOGIN_SUCCESS
 
 
 def main():
@@ -65,7 +69,8 @@ def main():
         reader = csv.DictReader(f)
 
         global users
-        users = {row['Username']: row['Password'] for row in reader}
+        users = {row['Username']: {'password': row['Password'],
+                                   'logged-in': False} for row in reader}
 
     # print(users)
 
