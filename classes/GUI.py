@@ -19,6 +19,12 @@ class GUI:
         login_window = LoginWindow(self.__game_controller)
         login_window.set_GUI(self)
 
+        # Room Window
+        # TODO
+
+        # Game Window
+        # TODO
+
         self.__game_window.mainloop()
 
     def set_username(self, username: str):
@@ -202,7 +208,7 @@ class LoginWindow:
         username = self.__entry_username.get()
         password = self.__entry_password.get()
 
-        is_login_success = self.__game_controller.authenticate_user(
+        is_login_success = self.__game_controller.login(
             username, password)
 
         if is_login_success:

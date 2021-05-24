@@ -15,7 +15,7 @@ LOGIN_ERR_INCORRECT = '101'
 LOGIN_ERR_ALREADY_LOGGED_IN = '102'
 
 
-def worker_thread(c):
+def handle_request(c):
     while True:
         data = c.recv(2048)
 
@@ -30,8 +30,12 @@ def worker_thread(c):
         if received_msg['code'] == '10':
             return_code = login_authenticator(
                 received_msg['username'], received_msg['password'])
+
             reply_msg = json.dumps({'code': return_code})
             print(reply_msg)
+
+        #  if received_msg['code'] == '20':
+        # TODO
 
         c.sendall(str.encode(reply_msg))
 
@@ -82,7 +86,7 @@ def main():
         print("Connected to: ", addr[0], ':', addr[1])
 
         # Start a nwe thread and return its identifier
-        start_new_thread(worker_thread, (c,))
+        start_new_thread(handle_request, (c,))
 
     s.close()
 

@@ -7,7 +7,7 @@ class GameController:
     def __init__(self, host: str, port: int):
         self.__communicator = Communicator(host, port)
 
-    def authenticate_user(self, username: str, password: str):
+    def login(self, username: str, password: str):
         # Send a login request to the server and check if login is successful
 
         # send login request msg
@@ -21,3 +21,11 @@ class GameController:
             return True
         else:
             return False
+
+    def wait_for_players(self):
+        pass
+        # TODO
+
+    def start_game(self):
+        pass
+        # TODO
