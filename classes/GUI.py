@@ -41,7 +41,7 @@ class GUI:
 		self.__labelHead = Label(self.__game_window,
 								 bg="#17202A",
 								 fg="#EAECEE",
-								 text=self.__username,
+								 text=self.__username,		# Countdown placement
 								 font="Helvetica 13 bold",
 								 pady=5)
 		self.__labelHead.place(relwidth=1)
