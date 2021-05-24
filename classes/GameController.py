@@ -1,6 +1,6 @@
-import json
-
 from classes.Communicator import Communicator
+
+import json
 
 
 class GameController:
@@ -22,10 +22,7 @@ class GameController:
         else:
             return False
 
-    def wait_for_players(self):
-        pass
-        # TODO
-
     def start_game(self):
-        pass
-        # TODO
+        # Signal the server to start the game
+
+        send_msg = json.dumps({'code': })
