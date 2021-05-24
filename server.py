@@ -1,57 +1,139 @@
+from classes.User import User
+from classes.Timer import Timer
+from classes.enums.ApplicationCode import ApplicationCode
+from classes.enums.Role import Role
+
 import socket
 import csv
 import json
+import random
 
 from _thread import *
 import threading
 
+# Variables
 MAX_PLAYERS = 5
-players = []
-users = {}
+MIN_PLAYERS = 3
+LOBBY_WAITTIME = 30
 
-# Application codes
-LOGIN_SUCCESS = '100'
-LOGIN_ERR_INCORRECT = '101'
-LOGIN_ERR_ALREADY_LOGGED_IN = '102'
+UsersDatabase = {}  # Database of users and passwords information
+active_users = []  # A list of currently active users
+drawer_id = -1
 
 
-def handle_request(c):
+def handle_request(user: User):
     while True:
-        data = c.recv(2048)
+        data = user.get_connection().recv(2048)
 
         if not data:
-            print("Goodbye")
-            players.remove(c)
+            logout(user)
             break
 
         received_msg = data.decode('utf-8')
         received_msg = json.loads(received_msg)
 
-        if received_msg['code'] == '10':
-            return_code = login_authenticator(
+        # LOGIN REQUEST
+        if received_msg['code'] == ApplicationCode.LOGIN_REQUEST:
+            return_code = login_authenticate(
                 received_msg['username'], received_msg['password'])
 
             reply_msg = json.dumps({'code': return_code})
             print(reply_msg)
+            user.get_connection().sendall(str.encode(reply_msg))
+        #
 
+        # JOIN ROOM REQUEST
         #  if received_msg['code'] == '20':
-        # TODO
+        # # Check if number of player exceeds the maximum number of players
+            # if active_users.index(user) <= MAX_PLAYERS:
+            #     reply_msg = json.dumps(
+            #         {'code': ApplicationCode.JOIN_ROOM_SUCCESS, 'cur_time': timer.get_curtime()})
+            # else:
+            #     reply_msg = json.dumps({'code': ApplicationCode.JOIN_ROOM_ERR})
+        #
 
-        c.sendall(str.encode(reply_msg))
+        # START GAME REQUEST
+        if received_msg['code'] == ApplicationCode.GAME_START:
+            timer = Timer(LOBBY_WAITTIME)  # A singleton timer object
+
+            # The first player in the room starts the waiting countdown
+            if active_users.index(user) == 0:
+                start_new_thread(countdown, (timer, ))
+
+            # Reply with the current time
+            reply_msg = json.dumps(
+                {'code': ApplicationCode.GAME_START_WAITING, 'cur_time': timer.get_curtime()})
+            user.get_connection().sendall(str.encode(reply_msg))
+            print(reply_msg)
+
+            # After the timer runs out
+            while True:
+                if timer.is_countdown_finished:
+                    if len(active_users) >= MIN_PLAYERS:
+                        # Role assignment
+                        if active_users.index(user) == 0:
+                            drawer_id = random.randint(0, MAX_PLAYERS - 1)
+
+                        if active_users.index(user) == drawer_id:
+                            reply_msg = json.dumps(
+                                {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer})
+                        else:
+                            reply_msg = json.dumps(
+                                {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Guesser})
+
+                        break
+
+                    else:
+                        if active_users.index(user) == 0:
+                            timer.restart_countdown()
+
+                user.get_connection().sendall(str.encode(reply_msg))
+                print(reply_msg)
+            #
 
 
-def login_authenticator(username, password):
-    global users
-    if username not in users.keys() or password != users[username]['password']:
+def login_authenticate(username, password):
+    # check if given username and password is in the database
+
+    # Arguments:
+    # -- username: username inputed by user
+    # -- password: password inputed by user
+
+    global UsersDatabase
+    if username not in UsersDatabase.keys() or password != UsersDatabase[username]['password']:
         print("Username or password is incorrect")
         return LOGIN_ERR_INCORRECT
 
-    if users[username]['logged-in']:
+    if UsersDatabase[username]['logged-in']:
         print("User has already logged in")
         return LOGIN_ERR_ALREADY_LOGGED_IN
 
-    users[username]['logged-in'] = True
+    UsersDatabase[username]['logged-in'] = True
     return LOGIN_SUCCESS
+
+
+def logout(user):
+    # un-register user
+
+    # Arguments:
+    # -- user: an user initiating logout
+
+    print("Goodbye")
+    UsersDatabase[user.get_username]['logged-in'] = False
+    active_users.remove(user)
+
+
+def countdown(timer: Timer):
+    # wait for timer to finish counting down, then destroy thread
+
+    # Arguments:
+    # -- timer: timer object init before creating the thread
+
+    # Returns:
+    # True, which destroy the thread
+
+    timer.start_countdown()
+    return True
 
 
 def main():
@@ -72,21 +154,20 @@ def main():
     with open('./users.csv') as f:
         reader = csv.DictReader(f)
 
-        global users
-        users = {row['Username']: {'password': row['Password'],
-                                   'logged-in': False} for row in reader}
-
-    # print(users)
+        global UsersDatabase
+        UsersDatabase = {row['Username']: {'password': row['Password'],
+                                           'logged-in': False} for row in reader}
 
     while True:
         # Establish a connection with a client
-        c, addr = s.accept()
-        players.append(c)
+        connection, addr = s.accept()
+        newUser = User(connection)
+        active_users.append(newUser)
 
         print("Connected to: ", addr[0], ':', addr[1])
 
         # Start a nwe thread and return its identifier
-        start_new_thread(handle_request, (c,))
+        start_new_thread(handle_request, (newUser,))
 
     s.close()
 
