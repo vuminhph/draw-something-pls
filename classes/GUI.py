@@ -2,8 +2,12 @@
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
+# from PIL import Image
 
 from classes.GameController import GameController
+# from classes.Communicator import Communicator
+
+# import threading
 # GUI class for the chat
 
 
