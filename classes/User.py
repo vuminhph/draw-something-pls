@@ -1,4 +1,4 @@
-from classes.Role import Role
+from classes.enums.Role import Role
 
 
 class User:

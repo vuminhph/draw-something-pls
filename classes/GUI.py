@@ -24,8 +24,10 @@ class GUI:
     def set_username(self, username: str):
         self.__username = username
 
-        def display_waiting_window(self):
-            wait_window = Wait
+    def display_waiting_window(self):
+        cur_time = self.__game_controller.start_game()
+        waiting_window = WaitingWindow(cur_time)
+        waiting_window.set_GUI(self)
 
     def display_game_window(self):
         # Game window
@@ -33,8 +35,8 @@ class GUI:
         self.__game_window.title("GAME ROOM #1")
         self.__game_window.resizable(width=False,
                                      height=False)
-        self.__game_window.configure(width=1024,
-                                     height=768,
+        self.__game_window.configure(width=900,
+                                     height=600,
                                      bg="#17202A")
 
         self.__labelHead = Label(self.__game_window,
@@ -59,7 +61,6 @@ class GUI:
                                bg="#17202A",
                                fg="#EAECEE",
                                font="Helvetica 14",
-
                                padx=1,
                                pady=1)
         self.__chatRoom.place(relheight=0.745,
@@ -95,7 +96,6 @@ class GUI:
                               relheight=0.06,
                               rely=0.008,
                               relx=0.011)
-
         self.__entryMsg.focus()
 
         # create a Send Button
@@ -109,27 +109,17 @@ class GUI:
                                rely=0.008,
                                relheight=0.06,
                                relwidth=0.22)
+        self.__chatRoom.config(cursor="arrow")
 
-        self.__textCons.config(cursor="arrow")
-
-        # create a scroll bar
-        scrollbar = Scrollbar(self.__textCons)
-
-        # place the scroll bar
-        # into the gui window
-        scrollbar.place(relheight=1,
-                        relx=0.974)
-
-        scrollbar.config(command=self.__textCons.yview)
-
-        self.__textCons.config(state=DISABLED)
+        self.__chatRoom.config(state=DISABLED)
 
     # function to basically start the thread for sending messages
     def __send_message(self, msg):
-        self.__textCons.config(state=DISABLED)
+        self.__chatRoom.config(state=DISABLED)
         self.msg = msg
         self.__entryMsg.delete(0, END)
-        # TODO: Define sending function
+        # snd = threading.Thread(target=Communicator.send_message)
+        # snd.start()
 
     # function to receive messages
     # TODO
@@ -212,7 +202,7 @@ class LoginWindow:
         username = self.__entry_username.get()
         password = self.__entry_password.get()
 
-        is_login_success = self.__game_controller.authenticate_user(
+        is_login_success = self.__game_controller.login(
             username, password)
 
         if is_login_success:
@@ -236,7 +226,7 @@ class LoginWindow:
         # If login is successful, then destroy login window to the next window
         self.__window.destroy()
         self.__GUI.set_username(username)
-        self.__GUI.display_game_window()
+        self.__GUI.display_waiting_window()
 
 
 class WaitingWindow:
@@ -295,3 +285,6 @@ class WaitingWindow:
 
         self.__wait_logo_label.configure(image=frame)
         self.__window.after(100, self.__update_frame, i)
+
+    def set_GUI(self, GUI: GUI):
+        self.__GUI = GUI

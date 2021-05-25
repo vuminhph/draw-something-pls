@@ -11,6 +11,6 @@ class ApplicationCode():
     ROOM_JOIN_ERR = '211'
 
     # Game Request codes
-    GAME_START = '30'
+    GAME_START_REQUEST = '30'
     GAME_START_WAITING = '300'
     GAME_ASSIGN_ROLE = '300'

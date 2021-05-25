@@ -53,7 +53,7 @@ def handle_request(user: User):
         #
 
         # START GAME REQUEST
-        if received_msg['code'] == ApplicationCode.GAME_START:
+        if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
             timer = Timer(LOBBY_WAITTIME)  # A singleton timer object
 
             # The first player in the room starts the waiting countdown
@@ -102,14 +102,14 @@ def login_authenticate(username, password):
     global UsersDatabase
     if username not in UsersDatabase.keys() or password != UsersDatabase[username]['password']:
         print("Username or password is incorrect")
-        return LOGIN_ERR_INCORRECT
+        return ApplicationCode.LOGIN_ERR_INCORRECT
 
     if UsersDatabase[username]['logged-in']:
         print("User has already logged in")
-        return LOGIN_ERR_ALREADY_LOGGED_IN
+        return ApplicationCode.LOGIN_ERR_ALREADY_LOGGED_IN
 
     UsersDatabase[username]['logged-in'] = True
-    return LOGIN_SUCCESS
+    return ApplicationCode.LOGIN_SUCCESS
 
 
 def logout(user):

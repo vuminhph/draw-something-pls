@@ -1,4 +1,5 @@
 from classes.Communicator import Communicator
+from classes.enums.ApplicationCode import ApplicationCode
 
 import json
 
@@ -12,17 +13,26 @@ class GameController:
 
         # send login request msg
         send_msg = json.dumps(
-            {'code': '10', 'username': username, 'password': password})
+            {'code': ApplicationCode.LOGIN_REQUEST, 'username': username, 'password': password})
         self.__communicator.send_message(send_msg)
 
         # receive reply from server
-        login_result = self.__communicator.receive_message()
-        if login_result['code'] == '100':
+        reply_msg = self.__communicator.receive_message()
+        if reply_msg['code'] == ApplicationCode.LOGIN_SUCCESS:
             return True
         else:
             return False
 
     def start_game(self):
-        # Signal the server to start the game
+        # Sends a start game signal to server
 
-        send_msg = json.dumps({'code': })
+        # Returns:
+        # -- the current countdown time from server
+
+        # Signal the server to start the game
+        send_msg = json.dumps({'code': ApplicationCode.GAME_START_REQUEST})
+        self.__communicator.send_message(send_msg)
+
+        # receive reply from server
+        reply_msg = self.__communicator.receive_message()
+        return reply_msg['cur_time']
