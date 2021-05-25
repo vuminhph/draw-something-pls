@@ -1,5 +1,5 @@
 from classes.User import User
-from classes.Timer import Timer
+from classes.Timer import Timer, Duration
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 
@@ -14,7 +14,6 @@ import threading
 # Variables
 MAX_PLAYERS = 5
 MIN_PLAYERS = 3
-LOBBY_WAITTIME = 30
 
 UsersDatabase = {}  # Database of users and passwords information
 active_users = []  # A list of currently active users
@@ -30,6 +29,8 @@ def handle_request(user: User):
             break
 
         received_msg = data.decode('utf-8')
+        print('Received request from:',
+              user.get_connection().getpeername(), ':', received_msg)
         received_msg = json.loads(received_msg)
 
         # LOGIN REQUEST
@@ -38,8 +39,7 @@ def handle_request(user: User):
                 received_msg['username'], received_msg['password'])
 
             reply_msg = json.dumps({'code': return_code})
-            print(reply_msg)
-            user.get_connection().sendall(str.encode(reply_msg))
+            send_reply_msg(user, reply_msg)
         #
 
         # JOIN ROOM REQUEST
@@ -52,9 +52,10 @@ def handle_request(user: User):
             #     reply_msg = json.dumps({'code': ApplicationCode.JOIN_ROOM_ERR})
         #
 
-        # START GAME REQUEST
-        if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
-            timer = Timer(LOBBY_WAITTIME)  # A singleton timer object
+        # WAIT TIME REQUEST
+        if received_msg['code'] == ApplicationCode.WAIT_TIME_REQUEST:
+            # A singleton timer object
+            timer = Timer(Duration.WAITING_FOR_PLAYERS)
 
             # The first player in the room starts the waiting countdown
             if active_users.index(user) == 0:
@@ -62,33 +63,30 @@ def handle_request(user: User):
 
             # Reply with the current time
             reply_msg = json.dumps(
-                {'code': ApplicationCode.GAME_START_WAITING, 'cur_time': timer.get_curtime()})
-            user.get_connection().sendall(str.encode(reply_msg))
-            print(reply_msg)
+                {'code': ApplicationCode.START_WAITING, 'current_time': timer.get_curtime()})
+            send_reply_msg(user, reply_msg)
+        #
 
-            # After the timer runs out
-            while True:
-                if timer.is_countdown_finished:
-                    if len(active_users) >= MIN_PLAYERS:
-                        # Role assignment
-                        if active_users.index(user) == 0:
-                            drawer_id = random.randint(0, MAX_PLAYERS - 1)
+        # GAME START REQUEST
+        if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
+            if len(active_users) >= MIN_PLAYERS:
+                global drawer_id
+                # Role assignment
+                if active_users.index(user) == 0:
+                    drawer_id = random.randint(0, MAX_PLAYERS - 1)
 
-                        if active_users.index(user) == drawer_id:
-                            reply_msg = json.dumps(
-                                {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer})
-                        else:
-                            reply_msg = json.dumps(
-                                {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Guesser})
-
-                        break
-
-                    else:
-                        if active_users.index(user) == 0:
-                            timer.restart_countdown()
-
-                user.get_connection().sendall(str.encode(reply_msg))
-                print(reply_msg)
+                if active_users.index(user) == drawer_id:
+                    reply_msg = json.dumps(
+                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer})
+                else:
+                    reply_msg = json.dumps(
+                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Guesser})
+            else:
+                reply_msg = json.dumps(
+                    {'code': ApplicationCode.CONTINUE_WAITING})
+                if active_users.index(user) == 0:
+                    start_new_thread(countdown, (timer,))
+            send_reply_msg(user, reply_msg)
             #
 
 
@@ -136,6 +134,12 @@ def countdown(timer: Timer):
     return True
 
 
+def send_reply_msg(user, message):
+    print('Reply message sent to',
+          user.get_connection().getpeername(), ':', message)
+    user.get_connection().sendall(str.encode(message))
+
+
 def main():
     HOST = "127.0.0.1"
     PORT = 5555
@@ -146,6 +150,8 @@ def main():
         s.bind((HOST, PORT))
     except socket.error as e:
         print(e)
+
+    s.settimeout(1.0)
 
     s.listen(MAX_PLAYERS)
     print("Socket is listening on port", PORT)
@@ -159,15 +165,22 @@ def main():
                                            'logged-in': False} for row in reader}
 
     while True:
-        # Establish a connection with a client
-        connection, addr = s.accept()
-        newUser = User(connection)
-        active_users.append(newUser)
+        try:
+            # Establish a connection with a client
+            connection, addr = s.accept()
+            newUser = User(connection)
+            active_users.append(newUser)
 
-        print("Connected to: ", addr[0], ':', addr[1])
+            print("Connected to: ", addr[0], ':', addr[1])
 
-        # Start a nwe thread and return its identifier
-        start_new_thread(handle_request, (newUser,))
+            # Start a nwe thread and return its identifier
+            start_new_thread(handle_request, (newUser,))
+        except socket.timeout:
+            continue
+        except KeyboardInterrupt:
+            for user in active_users:
+                user.get_connection().close()
+            break
 
     s.close()
 

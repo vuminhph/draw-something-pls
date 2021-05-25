@@ -1,11 +1,16 @@
+from classes.GameController import GameController
+from classes.enums.ApplicationCode import ApplicationCode
+from classes.enums.Role import Role
+from classes.Timer import Duration
+
 # import all the required modules
 from tkinter import *
 from tkinter import font
 from tkinter import ttk
 # from PIL import Image
 
-from classes.GameController import GameController
-# from classes.Communicator import Communicator
+import time
+from _thread import *
 
 # import threading
 # GUI class for the chat
@@ -29,8 +34,7 @@ class GUI:
         self.__username = username
 
     def display_waiting_window(self):
-        cur_time = self.__game_controller.start_game()
-        waiting_window = WaitingWindow(cur_time)
+        waiting_window = WaitingWindow(self.__game_controller)
         waiting_window.set_GUI(self)
 
     def display_game_window(self):
@@ -39,8 +43,8 @@ class GUI:
         self.__game_window.title("GAME ROOM #1")
         self.__game_window.resizable(width=False,
                                      height=False)
-        self.__game_window.configure(width=900,
-                                     height=600,
+        self.__game_window.configure(width=1024,
+                                     height=768,
                                      bg="#17202A")
 
         self.__labelHead = Label(self.__game_window,
@@ -141,8 +145,8 @@ class LoginWindow:
         self.__window.title("Login")
         self.__window.resizable(width=False,
                                 height=False)
-        self.__window.configure(width=1024,
-                                height=768)
+        self.__window.configure(width=400,
+                                height=300)
         # create login request Label
         label_instruct = Label(self.__window,
                                text="Please login to continue",
@@ -229,21 +233,24 @@ class LoginWindow:
     def __go_ahead(self, username: str):
         # If login is successful, then destroy login window to the next window
         self.__window.destroy()
+        time.sleep(1)
         self.__GUI.set_username(username)
         self.__GUI.display_waiting_window()
 
 
 class WaitingWindow:
     # constructor method
-    def __init__(self, cur_time):
-        self.__window = Tk()
+    def __init__(self, game_controller: GameController):
+        self.__game_controller = game_controller
+
+        self.__window = Toplevel()
 
         # Main wait window
         self.__window.title("Please wait...")
         self.__window.resizable(width=False,
                                 height=False)
-        self.__window.configure(width=1024,
-                                height=768)
+        self.__window.configure(width=400,
+                                height=300)
 
         # Label
         self.__label = Label(self.__window,
@@ -262,8 +269,8 @@ class WaitingWindow:
                                      relwidth=1,
                                      rely=0.25)
 
-        # Countdown placement]
-        self.__clock = cur_time
+        # Countdown placement
+        self.__clock = self.__game_controller.request_clock_value()
         self.__timer = StringVar()
         self.__timer.set(str(self.__clock))  # The countdown timer
         self.__countdown_timer = Label(self.__window,
@@ -274,21 +281,44 @@ class WaitingWindow:
                                      rely=0.75)
 
         # Set the main loop
+        self.__thread_created = False
         self.__window.after(0, self.__update_frame, 0)
         self.__window.mainloop()
 
     def __update_frame(self, i):
-        frame = self.__wait_logo[i]
-        i += 1
-        if i == self.__frame_count:
-            i = 0
+        try:
+            if not self.__thread_created:
+                start_new_thread(self.__count_down, ())
+                self.__thread_created = True
 
-        if self.__clock > 0:
-            self.__clock -= 1
-            self.__timer.set(str(self.__clock))
+            frame = self.__wait_logo[i]
+            i += 1
+            if i == self.__frame_count:
+                i = 0
 
-        self.__wait_logo_label.configure(image=frame)
-        self.__window.after(100, self.__update_frame, i)
+            self.__wait_logo_label.configure(image=frame)
+            self.__window.after(100, self.__update_frame, i)
+        except:
+            pass
 
     def set_GUI(self, GUI: GUI):
         self.__GUI = GUI
+
+    def __count_down(self):
+        while self.__clock >= 0:
+            time.sleep(1)
+            self.__clock -= 1
+            self.__timer.set(str(self.__clock))
+
+            if self.__clock == 0:
+                reply_msg = self.__game_controller.start_game_request()
+                if reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
+                    self.__clock = Duration.WAITING_FOR_PLAYERS
+                elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
+                    # print the player's role
+                    if reply_msg['role'] == Role.Drawer:
+                        print('You have been assigned the role of Drawer')
+                    elif reply_msg['role'] == Role.Guesser:
+                        print('You have been assigned the role of Guesser')
+                    self.__window.destroy()
+                    time.sleep(1)

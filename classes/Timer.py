@@ -5,7 +5,6 @@ from utils import singleton
 @singleton
 class Timer:
     def __init__(self, t):
-        self.is_countdown_finished = False
         self.__time_start = self.__time_cur = t
 
     def start_countdown(self):
@@ -16,12 +15,14 @@ class Timer:
         while self.__time_cur:
             time.sleep(1)
             self.__time_cur -= 1
-
-        self.is_countdown_finished = True
+            print('Current time:', self.__time_cur, end='\r')
 
     def restart_countdown(self):
-        self.is_countdown_finished = False
         self.start_countdown()
 
     def get_curtime(self):
         return self.__time_cur
+
+
+class Duration():
+    WAITING_FOR_PLAYERS = 30

@@ -23,16 +23,29 @@ class GameController:
         else:
             return False
 
-    def start_game(self):
-        # Sends a start game signal to server
+    def request_clock_value(self):
+        # Request the server's waiting clock value
 
         # Returns:
         # -- the current countdown time from server
 
-        # Signal the server to start the game
+        send_msg = json.dumps({'code': ApplicationCode.WAIT_TIME_REQUEST})
+        self.__communicator.send_message(send_msg)
+
+        # receive reply from server
+        reply_msg = self.__communicator.receive_message()
+        return reply_msg['current_time']
+
+    def start_game_request(self):
+        # Signal the server to start the game, receive a role assignment if game is ready to start
+        # or continue waiting signal
+
+        # Returns:
+        # -- the reply message json
+
         send_msg = json.dumps({'code': ApplicationCode.GAME_START_REQUEST})
         self.__communicator.send_message(send_msg)
 
         # receive reply from server
         reply_msg = self.__communicator.receive_message()
-        return reply_msg['cur_time']
+        return reply_msg
