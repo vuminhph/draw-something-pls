@@ -87,15 +87,12 @@ class GUI:
                                        relx=0.01,
                                        rely=0.3)
                                       
-        self.__scoreboard_list = StringVar()
-        self.__scoreboard_list.set("Table")
+        # self.__scoreboard_list = StringVar()
+        # self.__scoreboard_list.set("Table")
 
-        self.__scoreboard__table = Label(self.__game_window,
-                                        textvariable=self.__scoreboard_list,
+        self.__scoreboard__table = Text(self.__game_window,
                                         font="Helvetica 14",
-                                        relief="solid",
-                                        anchor=NW)
-        # self.__scoreboard__table.pack(padx=10, pady=10)
+                                        relief="solid")
         self.__scoreboard__table.place(relheight=0.35,
                                        relwidth=0.23,
                                        relx=0.01,
@@ -127,6 +124,8 @@ class GUI:
                               relwidth=0.28,
                               relx=0.71,
                               rely=0.1)
+        self.__chatRoom.config(cursor="arrow")
+        self.__chatRoom.config(state=DISABLED)
 
         scrollbar = Scrollbar(self.__chatRoom)
         scrollbar.place(relheight=1.02,
@@ -134,13 +133,7 @@ class GUI:
 						rely=-0.01)
         scrollbar.config(command=self.__chatRoom.yview)
 
-        # self.__labelBottom = Label(self.__game_window,
-        #                            bg="#ABB2B9",
-        #                            height=80)
-        # self.__labelBottom.place(relwidth=1,
-        #                          rely=0.9)
-
-        # Answering space
+        # Answering place
         self.__answer_label = Label(self.__game_window,
                                     text="Your answer:",
                                     font="Helvetica 14 bold",
@@ -150,45 +143,54 @@ class GUI:
 								  relx=0.01,
                                   rely=0.92)
 
-        self.__entryMsg = Entry(self.__game_window,
+        self.__answer_entry = Entry(self.__game_window,
                                 bg="#2C3E50",
                                 fg="#EAECEE",
                                 font="Helvetica 14")
-        self.__entryMsg.place(relheight=0.06,
+        self.__answer_entry.place(relheight=0.06,
                               relwidth=0.45,
                               relx=0.25,
                               rely=0.92)
-        self.__entryMsg.focus()
+        self.__answer_entry.focus()
 
-        self.__buttonMsg = Button(self.__game_window,
+        self.__answer_send = Button(self.__game_window,
                                   text="Send",
                                   font="Helvetica 12 bold",
                                   width=20,
                                   bg="#ABB2B9",
-                                  command=lambda: self.__send_message(self.__entryMsg.get()))
-        self.__buttonMsg.place(relheight=0.06,
+                                  command=lambda: self.__send_message(self.__answer_entry.get()))
+        self.__answer_send.place(relheight=0.06,
                                relwidth=0.07,
                                relx=0.71,
                                rely=0.92)
-
-        self.__chatRoom.config(cursor="arrow")
-        self.__chatRoom.config(state=DISABLED)
-
+        
+        # Test showing the window
         self.__game_window.mainloop()
 
-    # function to basically start the thread for sending messages
     def __send_message(self, msg):
         self.__chatRoom.config(state=DISABLED)
         self.msg = msg
-        self.__entryMsg.delete(0, END)
-        # snd = threading.Thread(target=Communicator.send_message)
-        # snd.start()
+        self.__answer_entry.delete(0, END)
 
-    # function to receive messages
-    # TODO
+    def __display_leaderboard(self, scoreboard:list):
+        self.__scoreboard__table.delete(0, END)
+        # Insert from scoreboard list
+        # TODO
 
-    # function to send messages
-    # TODO
+    def __reset_round(self):
+        # Clear all answers of previous rounds
+        self.__chatRoom.delete(0, END)
+
+        # Update the scoreboard
+        self.__display_leaderboard()
+
+    def __wait_for_drawing(self):
+        # Disable the Send button in the time of drawing
+        self.__answer_send.config(state=DISABLED)
+
+    def __display_message(self, username, message):
+        self.__chatRoom.insert(END, username + ': "' + message + '"\n')
+        pass
 
 gui = GUI().display_game_window()
 # gui.mainloop()
