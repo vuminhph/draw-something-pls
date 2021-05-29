@@ -17,7 +17,7 @@ import tkinter
 # GUI class for the chat
 
 
-class GUI:
+class GameWindow:
     # constructor method
     def __init__(self):
         # self.__game_controller = GameController(host, port)
@@ -158,7 +158,7 @@ class GUI:
                                   font="Helvetica 12 bold",
                                   width=20,
                                   bg="#ABB2B9",
-                                  command=lambda: self.__send_message(self.__answer_entry.get()))
+                                  command=lambda: self.__send_answer(self.__answer_entry.get()))
         self.__answer_send.place(relheight=0.06,
                                relwidth=0.07,
                                relx=0.71,
@@ -167,9 +167,9 @@ class GUI:
         # Test showing the window
         self.__game_window.mainloop()
 
-    def __send_message(self, msg):
+    def __send_answer(self, msg):
         self.__chatRoom.config(state=DISABLED)
-        self.msg = msg
+        self.__msg = msg
         self.__answer_entry.delete(0, END)
 
     def __display_leaderboard(self, scoreboard:list):
@@ -188,9 +188,8 @@ class GUI:
         # Disable the Send button in the time of drawing
         self.__answer_send.config(state=DISABLED)
 
-    def __display_message(self, username, message):
-        self.__chatRoom.insert(END, username + ': "' + message + '"\n')
-        pass
+    def __display_answer(self, username, answer):
+        self.__chatRoom.insert(END, username + ': "' + answer + '"\n')
 
-gui = GUI().display_game_window()
+gui = GameWindow().display_game_window()
 # gui.mainloop()
