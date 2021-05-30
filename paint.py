@@ -63,6 +63,7 @@ class Paint(object):
 
     def choose_color(self):
         self.color = askcolor(color=self.color)[1]
+        print(self.color)
 
     def use_eraser (self):
         self.activate_button(self.eraser_button, eraser_mode=True)
