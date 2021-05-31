@@ -27,30 +27,33 @@ class Paint(object):
         self.root.title("Paint")
         self.root.configure(bg=self.WINDOW_BG)
 
-        self.pen_button = Button(self.root, height=1, width=4, bg='#eba134', text='Pen', command=self.use_pen)
+        self.style = ttk.Style()
+        self.style.configure("myStyle.Horizontal.TScale", background = self.WINDOW_BG)
+
+        self.pen_button = Button(self.root, height=1, width=7, bg='#eba134', text='Pen', command=self.use_pen)
         self.pen_button.grid(row=0, column=0, pady=8)
      
         self.eraser_button = Button(
-            self.root, height=1, width=4, bg='#de7c7c', text='Eraser', command=self.use_eraser)
+            self.root, height=1, width=7, bg='#de7c7c', text='Eraser', command=self.use_eraser)
         self.eraser_button.grid(row=0, column=1)
 
         self.color_button = Button(
-            self.root, height=1, width=4, bg='#8ad190', text='Color', command=self.choose_color)
+            self.root, height=1, width=7, bg='#8ad190', text='Color', command=self.choose_color)
         self.color_button.grid(row=0, column=2)
 
         self.reset_button = Button(
-            self.root, height=1, width=4, bg='#815f96', text='Clear', command=self.clear_all)
+            self.root, height=1, width=7, bg='#815f96', text='Clear', command=self.clear_all)
         self.reset_button.grid(row=0, column=3)
 
         # self.save_button = Button(self.root, height=1, width=4, bg='#e8b443', text='Finish', command=self.quit)
         # self.save_button.grid(row=0, column=4)
 
-        self.choose_size_button = ttk.Scale(
-            self.root, from_=1, to=10, orient=HORIZONTAL)
-        self.choose_size_button.grid(row=1, column=0, pady=10)
-
+        self.choose_size_slide = ttk.Scale(
+            self.root, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
+        self.choose_size_slide.grid(row=1, column=0, pady=10)
+        
         self.choose_eraser_size_button = ttk.Scale(
-            self.root,from_=1, to=10, orient=HORIZONTAL)
+            self.root,from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
         self.choose_eraser_size_button.grid(row=1, column=1)
 
         self.timerLabel = Label(self.root, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Helvatical bold',30))
@@ -82,7 +85,7 @@ class Paint(object):
     def setup(self):
         self.old_x = None
         self.old_y = None
-        self.line_width = self.choose_size_button.get()
+        self.line_width = self.choose_size_slide.get()
         self.eraser_width = self.choose_eraser_size_button.get()
         self.color = self.DEFAULT_COLOR
         self.eraser_on = False
@@ -114,7 +117,7 @@ class Paint(object):
         self.eraser_on = eraser_mode
 
     def paint(self, event):
-        self.line_width = self.choose_size_button.get()
+        self.line_width = self.choose_size_slide.get()
         paint_color = self.c["bg"] if self.eraser_on else self.color
         if self.old_x and self.old_y:
             if self.eraser_on:
