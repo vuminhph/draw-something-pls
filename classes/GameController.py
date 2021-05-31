@@ -49,3 +49,7 @@ class GameController:
         # receive reply from server
         reply_msg = self.__communicator.receive_message()
         return reply_msg
+
+    def logout(self):
+        send_msg = json.dumps({'code': ApplicationCode.LOGOUT})
+        self.__communicator.send_message(send_msg)

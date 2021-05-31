@@ -18,4 +18,4 @@ class ApplicationCode():
     CONTINUE_WAITING = '311'
 
     # Logout code
-    LOGOUT_REQUEST = ''
+    LOGOUT = '40'

@@ -1,4 +1,5 @@
-from classes.User import User
+from classes.Users import ServerUser as User
+
 from classes.Timer import Timer, Duration
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
@@ -15,6 +16,7 @@ MAX_PLAYERS = 5
 MIN_PLAYERS = 3
 
 UsersDatabase = {}  # Database of users and passwords information
+
 active_users = []  # A list of currently active users
 drawer_id = -1
 
@@ -42,7 +44,7 @@ def handle_request(user: User):
         # LOGIN REQUEST
         if received_msg['code'] == ApplicationCode.LOGIN_REQUEST:
             return_code = login_authenticate(
-                received_msg['username'], received_msg['password'])
+                user, received_msg['username'], received_msg['password'])
 
             reply_msg = json.dumps({'code': return_code})
             send_reply_msg(user, reply_msg)
@@ -76,19 +78,29 @@ def handle_request(user: User):
         # GAME START REQUEST
         if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
             if len(active_users) >= MIN_PLAYERS:
+                # If there are enough players in the room to start the game
+
                 global drawer_id
                 # Role assignment
                 if active_users.index(user) == 0:
                     drawer_id = random.randint(0, MAX_PLAYERS - 1)
 
+                code = ApplicationCode.GAME_ASSIGN_ROLE
+                players_dict = {}
+                for user in active_users:
+                    players_dict[user.get_username()] = 0
+
                 if active_users.index(user) == drawer_id:
                     keyword = Word_list[random.randint(0, len(Word_list)-1)]
                     reply_msg = json.dumps(
-                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer, 'keyword': keyword})
+                        {'code': code, 'role': Role.Drawer, 'keyword': keyword, 'players_dict': players_dict})
                 else:
                     reply_msg = json.dumps(
-                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Guesser})
+                        {'code': code, 'role': Role.Guesser, 'players_dict': players_dict})
+
             else:
+                # If there isn't enough players
+
                 reply_msg = json.dumps(
                     {'code': ApplicationCode.CONTINUE_WAITING})
                 if active_users.index(user) == 0:
@@ -96,8 +108,12 @@ def handle_request(user: User):
             send_reply_msg(user, reply_msg)
             #
 
+        # LOGOUT
+        if received_msg['code'] == ApplicationCode.LOGOUT:
+            logout(user)
 
-def login_authenticate(username: str, password: str):
+
+def login_authenticate(user: User, username: str, password: str):
     # check if given username and password is in the database
 
     # Arguments:
@@ -114,6 +130,7 @@ def login_authenticate(username: str, password: str):
         return ApplicationCode.LOGIN_ERR_ALREADY_LOGGED_IN
 
     UsersDatabase[username]['logged-in'] = True
+    user.set_username(username)
     return ApplicationCode.LOGIN_SUCCESS
 
 
@@ -123,8 +140,9 @@ def logout(user: User):
     # Arguments:
     # -- user: an user initiating logout
 
-    print("Goodbye")
-    UsersDatabase[user.get_username]['logged-in'] = False
+    print("Goodbye, ", user.get_connection().getpeername())
+    if user.get_username() is not None:
+        UsersDatabase[user.get_username()]['logged-in'] = False
     active_users.remove(user)
 
 

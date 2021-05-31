@@ -1,8 +1,3 @@
-# from classes.GameController import GameController
-# from classes.enums.ApplicationCode import ApplicationCode
-# from classes.enums.Role import Role
-# from classes.Timer import Duration
-
 # import all the required modules
 from tkinter import *
 from tkinter import font
@@ -17,40 +12,32 @@ import tkinter
 # GUI class for the chat
 
 
-class GameWindow:
+class GuesserWindow():
     # constructor method
-    def __init__(self):
-        # self.__game_controller = GameController(host, port)
+    def __init__(self, GUI):
+        super().__init__(GUI)
 
-        # chat window which is currently hidden
-        self.__game_window = Tk()
-        # self.__game_window.withdraw()
-
-        # login_window = LoginWindow(self.__game_controller)
-        # login_window.set_GUI(self)
-        # self.__game_window.mainloop()
-
-    # def set_username(self, username: str):
-    #     self.__username = username
+    def set_username(self, username: str):
+        self.__username = username
 
     # def display_waiting_window(self):
     #     waiting_window = WaitingWindow(self.__game_controller)
     #     waiting_window.set_GUI(self)
 
-    def display_game_window(self):
+    def display_guesser_window(self):
         # Game window
-        self.__game_window.deiconify()
-        self.__game_window.title("GAME ROOM #1")
-        self.__game_window.resizable(width=False,
-                                     height=False)
-        self.__game_window.configure(width=1280,
-                                     height=720)
+        self.__window.deiconify()
+        self.__window.title("GAME ROOM #1")
+        self.__window.resizable(width=False,
+                                height=False)
+        self.__window.configure(width=1280,
+                                height=720)
 
         # Message title
         self.__msg_title = StringVar()
         self.__msg_title.set("Message")
 
-        self.__msg_label = Label(self.__game_window,
+        self.__msg_label = Label(self.__window,
                                  textvariable=self.__msg_title,
                                  font="Helvetica 20",
                                  fg="red",
@@ -60,37 +47,37 @@ class GameWindow:
                                relwidth=0.45,
                                relx=0.25,
                                rely=0.01)
-        
+
         # Timer
         self.__timer = StringVar()
         self.__timer.set("Timer")
 
-        self.__timer_label = Label(self.__game_window,
+        self.__timer_label = Label(self.__window,
                                    textvariable=self.__timer,
                                    font="Helvetica 35 bold",
                                    fg="green",
                                    bg="white",
                                    relief="ridge")
         self.__timer_label.place(relheight=0.08,
-                               relwidth=0.28,
-                               relx=0.71,
-                               rely=0.01)
+                                 relwidth=0.28,
+                                 relx=0.71,
+                                 rely=0.01)
 
         # Scoreboard
-        self.__scoreboard__label = Label(self.__game_window,
-                                        text="Scoreboard",
-                                        font="Helvetica 14 bold",
-                                        bg="black",
-                                        fg="white")
+        self.__scoreboard__label = Label(self.__window,
+                                         text="Scoreboard",
+                                         font="Helvetica 14 bold",
+                                         bg="black",
+                                         fg="white")
         self.__scoreboard__label.place(relheight=0.05,
                                        relwidth=0.23,
                                        relx=0.01,
                                        rely=0.3)
-                                      
+
         # self.__scoreboard_list = StringVar()
         # self.__scoreboard_list.set("Table")
 
-        self.__scoreboard__table = Text(self.__game_window,
+        self.__scoreboard__table = Text(self.__window,
                                         font="Helvetica 14",
                                         relief="solid")
         self.__scoreboard__table.place(relheight=0.35,
@@ -101,18 +88,18 @@ class GameWindow:
         # Picture room
         pictName = './images/@NVH-play.png'  # Define picture pathname
         self.__pict = PhotoImage(file=pictName)
-        self.__pictureRoom = Label(self.__game_window,
+        self.__pictureRoom = Label(self.__window,
                                    image=self.__pict,
                                    borderwidth=2,
                                    relief="ridge",
-								   bg="white")
+                                   bg="white")
         self.__pictureRoom.place(relheight=0.8,
                                  relwidth=0.45,
                                  relx=0.25,
                                  rely=0.1)
 
         # Chat room
-        self.__chatRoom = Text(self.__game_window,
+        self.__chatRoom = Text(self.__window,
                                width=20,
                                height=2,
                                bg="#17202A",
@@ -130,49 +117,49 @@ class GameWindow:
         scrollbar = Scrollbar(self.__chatRoom)
         scrollbar.place(relheight=1.02,
                         relx=0.96,
-						rely=-0.01)
+                        rely=-0.01)
         scrollbar.config(command=self.__chatRoom.yview)
 
         # Answering place
-        self.__answer_label = Label(self.__game_window,
+        self.__answer_label = Label(self.__window,
                                     text="Your answer:",
                                     font="Helvetica 14 bold",
-									anchor=E)
+                                    anchor=E)
         self.__answer_label.place(relheight=0.06,
-								  relwidth=0.23,
-								  relx=0.01,
+                                  relwidth=0.23,
+                                  relx=0.01,
                                   rely=0.92)
 
-        self.__answer_entry = Entry(self.__game_window,
-                                bg="#2C3E50",
-                                fg="#EAECEE",
-                                font="Helvetica 14")
+        self.__answer_entry = Entry(self.__window,
+                                    bg="#2C3E50",
+                                    fg="#EAECEE",
+                                    font="Helvetica 14")
         self.__answer_entry.place(relheight=0.06,
-                              relwidth=0.45,
-                              relx=0.25,
-                              rely=0.92)
+                                  relwidth=0.45,
+                                  relx=0.25,
+                                  rely=0.92)
         self.__answer_entry.focus()
 
-        self.__answer_send = Button(self.__game_window,
-                                  text="Send",
-                                  font="Helvetica 12 bold",
-                                  width=20,
-                                  bg="#ABB2B9",
-                                  command=lambda: self.__send_answer(self.__answer_entry.get()))
+        self.__answer_send = Button(self.__window,
+                                    text="Send",
+                                    font="Helvetica 12 bold",
+                                    width=20,
+                                    bg="#ABB2B9",
+                                    command=lambda: self.__send_answer(self.__answer_entry.get()))
         self.__answer_send.place(relheight=0.06,
-                               relwidth=0.07,
-                               relx=0.71,
-                               rely=0.92)
-        
+                                 relwidth=0.07,
+                                 relx=0.71,
+                                 rely=0.92)
+
         # Test showing the window
-        self.__game_window.mainloop()
+        self.__window.mainloop()
 
     def __send_answer(self, msg):
         self.__chatRoom.config(state=DISABLED)
         self.__msg = msg
         self.__answer_entry.delete(0, END)
 
-    def __display_leaderboard(self, scoreboard:list):
+    def __display_leaderboard(self, scoreboard: list):
         self.__scoreboard__table.delete(0, END)
         # Insert from scoreboard list
         # TODO
@@ -191,5 +178,6 @@ class GameWindow:
     def __display_answer(self, username, answer):
         self.__chatRoom.insert(END, username + ': "' + answer + '"\n')
 
-gui = GameWindow().display_game_window()
-# gui.mainloop()
+    def __on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.__window.destroy()
