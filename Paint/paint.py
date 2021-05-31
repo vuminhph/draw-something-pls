@@ -15,10 +15,10 @@ class Paint(object):
     DEFAULT_WIDTH = 600
     DEFAULT_HEIGHT = 600
     CANVAS_BG = 'white'
-    WINDOW_BG = '#2f4a57'
+    WINDOW_BG = '#17202A'
     LINE_WIDTH_OFFSET = 3
     ERASER_WIDTH_OFFSET = 13
-    TIME_LIMIT = 60
+    TIME_LIMIT = 10
 
     # Called when an instance of the class is created
     def __init__(self):
@@ -27,23 +27,23 @@ class Paint(object):
         self.root.title("Paint")
         self.root.configure(bg=self.WINDOW_BG)
 
-        self.pen_button = Button(self.root, text='Pen', command=self.use_pen)
-        self.pen_button.grid(row=0, column=0, pady=5)
-
+        self.pen_button = Button(self.root, height=1, width=4, bg='#eba134', text='Pen', command=self.use_pen)
+        self.pen_button.grid(row=0, column=0, pady=8)
+     
         self.eraser_button = Button(
-            self.root, text='Eraser', command=self.use_eraser)
+            self.root, height=1, width=4, bg='#de7c7c', text='Eraser', command=self.use_eraser)
         self.eraser_button.grid(row=0, column=1)
 
         self.color_button = Button(
-            self.root, text='Color', command=self.choose_color)
+            self.root, height=1, width=4, bg='#8ad190', text='Color', command=self.choose_color)
         self.color_button.grid(row=0, column=2)
 
         self.reset_button = Button(
-            self.root, text='Clear all', command=self.clear_all)
+            self.root, height=1, width=4, bg='#815f96', text='Clear', command=self.clear_all)
         self.reset_button.grid(row=0, column=3)
 
-        self.save_button = Button(self.root, text='Finish', command=self.quit)
-        self.save_button.grid(row=0, column=4)
+        # self.save_button = Button(self.root, height=1, width=4, bg='#e8b443', text='Finish', command=self.quit)
+        # self.save_button.grid(row=0, column=4)
 
         self.choose_size_button = ttk.Scale(
             self.root, from_=1, to=10, orient=HORIZONTAL)
@@ -54,12 +54,12 @@ class Paint(object):
         self.choose_eraser_size_button.grid(row=1, column=1)
 
         self.timerLabel = Label(self.root, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Helvatical bold',30))
-        self.timerLabel.grid(row=2, column=0, columnspan=5, pady=20)
+        self.timerLabel.grid(row=2, column=0, columnspan=4, pady=20)
         self.countdown()
 
         self.c = Canvas(self.root, bg=self.CANVAS_BG,
                         width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
-        self.c.grid(row=3, columnspan=5)
+        self.c.grid(row=3, columnspan=4)
 
         self.HAS_THREAD = False
         self.setup()
@@ -70,7 +70,7 @@ class Paint(object):
     def countdown(self):
         self.TIME_LIMIT -= 1
         if self.TIME_LIMIT > 0:
-            self.timerLabel.config(text=str(self.TIME_LIMIT))
+            self.timerLabel.config(text='<< ' + str(self.TIME_LIMIT) + ' >>')
             if self.TIME_LIMIT <=5:
                 self.timerLabel.config(fg="red")
             self.root.after(1000, self.countdown)
