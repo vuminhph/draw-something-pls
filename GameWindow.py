@@ -1,14 +1,14 @@
-# import all the required modules
-from classes.windows.DisplayWindow import DisplayWindow
-from classes.Users import User
-import classes.enums.ApplicationCode
-import classes.enums.Role
-import classes.Timer
-import classes.GUI
+# from classes.GameController import GameController
+# from classes.enums.ApplicationCode import ApplicationCode
+# from classes.enums.Role import Role
+# from classes.Timer import Duration
 
+# import all the required modules
 from os import stat
 from tkinter import *
-from tkinter import font, ttk, scrolledtext
+from tkinter import font
+from tkinter import ttk
+from tkinter import scrolledtext
 # from PIL import Image
 
 import time
@@ -19,23 +19,39 @@ import tkinter
 # GUI class for the chat
 
 
-class GuesserWindow(DisplayWindow):
+class GameWindow:
     # constructor method
-    def __init__(self, GUI, username: str, player_dict: dict):
-        super().__init__(GUI)
+    def __init__(self):
+        # self.__game_controller = GameController(host, port)
 
+        # chat window which is currently hidden
+        self.__game_window = Tk()
+        # self.__game_window.withdraw()
+
+        # login_window = LoginWindow(self.__game_controller)
+        # login_window.set_GUI(self)
+        # self.__game_window.mainloop()
+
+    def set_username(self, username: str):
+        self.__username = username
+
+    # def display_waiting_window(self):
+    #     waiting_window = WaitingWindow(self.__game_controller)
+    #     waiting_window.set_GUI(self)
+
+    def display_game_window(self):
         # Game window
-        self._window.deiconify()
-        self._window.title("GAME ROOM #1")
-        self._window.resizable(width=False,
-                               height=False)
-        self._window.configure(width=1280,
-                               height=720)
+        self.__game_window.deiconify()
+        self.__game_window.title("GAME ROOM #1")
+        self.__game_window.resizable(width=False,
+                                     height=False)
+        self.__game_window.configure(width=1280,
+                                     height=720)
 
         # Player name
-        self.__playerName = Label(self._window,
+        self.__playerName = Label(self.__game_window,
                                   font=("Consolas", 20),
-                                  text='Player: ' + username,
+                                  text='Player: '+self.__username,
                                   bg="white",
                                   relief="ridge")
         self.__playerName.place(relheight=0.08,
@@ -47,7 +63,7 @@ class GuesserWindow(DisplayWindow):
         self.__msg_title = StringVar()
         self.__msg_title.set("Message")
 
-        self.__msg_label = Label(self._window,
+        self.__msg_label = Label(self.__game_window,
                                  textvariable=self.__msg_title,
                                  font=("Consolas", 20, "italic"),
                                  bg="white",
@@ -61,7 +77,7 @@ class GuesserWindow(DisplayWindow):
         self.__timer = StringVar()
         self.__timer.set("60")
 
-        self.__timer_label = Label(self._window,
+        self.__timer_label = Label(self.__game_window,
                                    textvariable=self.__timer,
                                    font=("Consolas", 35, "bold"),
                                    bg="white",
@@ -72,7 +88,7 @@ class GuesserWindow(DisplayWindow):
                                  rely=0.01)
 
         # Scoreboard
-        self.__scoreboard__label = Label(self._window,
+        self.__scoreboard__label = Label(self.__game_window,
                                          text="Scoreboard",
                                          font=("Consolas", 16, "bold"),
                                          bg="black",
@@ -82,7 +98,7 @@ class GuesserWindow(DisplayWindow):
                                        relx=0.01,
                                        rely=0.1)
 
-        self.__scoreboard__table = Text(self._window,
+        self.__scoreboard__table = Text(self.__game_window,
                                         font="Consolas 14",
                                         relief="solid",
                                         state=DISABLED,
@@ -97,7 +113,7 @@ class GuesserWindow(DisplayWindow):
         # Picture room
         pictName = './images/@NVH-play.png'  # Define picture pathname
         self.__pict = PhotoImage(file=pictName)
-        self.__pictureRoom = Label(self._window,
+        self.__pictureRoom = Label(self.__game_window,
                                    image=self.__pict,
                                    borderwidth=2,
                                    relief="ridge",
@@ -108,7 +124,7 @@ class GuesserWindow(DisplayWindow):
                                  rely=0.1)
 
         # Chat room
-        self.__chatRoom = scrolledtext.ScrolledText(self._window,
+        self.__chatRoom = scrolledtext.ScrolledText(self.__game_window,
                                                     width=20,
                                                     height=2,
                                                     bg="#17202A",
@@ -124,7 +140,7 @@ class GuesserWindow(DisplayWindow):
                               rely=0.1)
 
         # Answering place
-        self.__answer_label = Label(self._window,
+        self.__answer_label = Label(self.__game_window,
                                     text="Your answer:",
                                     font="Consolas 14 bold",
                                     anchor=E)
@@ -133,7 +149,7 @@ class GuesserWindow(DisplayWindow):
                                   relx=0.01,
                                   rely=0.92)
 
-        self.__answer_entry = Entry(self._window,
+        self.__answer_entry = Entry(self.__game_window,
                                     bg="#2C3E50",
                                     fg="#EAECEE",
                                     font="Consolas 14")
@@ -143,7 +159,7 @@ class GuesserWindow(DisplayWindow):
                                   rely=0.92)
         self.__answer_entry.focus()
 
-        self.__answer_send = Button(self._window,
+        self.__answer_send = Button(self.__game_window,
                                     text="Send",
                                     font="Consolas 12 bold",
                                     width=20,
@@ -154,10 +170,16 @@ class GuesserWindow(DisplayWindow):
                                  relx=0.71,
                                  rely=0.92)
 
-        self.__display_scoreboard(player_dict)
+        # Add a mock dictionary
+        players = {
+            'Hoang': '10',
+            'Hung': '15',
+            'Minh': '20'
+        }
+        self.__display_scoreboard(players)
 
         # Test showing the window
-        self._window.mainloop()
+        self.__game_window.mainloop()
 
     def __send_answer(self, msg):
         self.__display_answer('Hoang', msg)
@@ -192,3 +214,8 @@ class GuesserWindow(DisplayWindow):
     def __wait_for_drawing(self):
         # Disable the Send button in the time of drawing
         self.__answer_send.config(state=DISABLED)
+
+
+gui = GameWindow()
+gui.set_username('Hoang')
+gui.display_game_window()

@@ -22,4 +22,4 @@ class Timer:
 
 
 class Duration():
-    WAITING_FOR_PLAYERS = 30
+    WAITING_FOR_PLAYERS = 15

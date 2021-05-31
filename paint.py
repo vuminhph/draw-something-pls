@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter.colorchooser import askcolor
 from tkinter.filedialog import asksaveasfile, asksaveasfilename
 import io
+import os
 from PIL import Image
 
 
@@ -108,10 +109,13 @@ class Paint(object):
     def save(self):
         # path = './Pictures/'
         ps = self.c.postscript(colormode='color')
-        filename = asksaveasfilename(defaultextension='.jpg')
-        if filename:
+        save_dir = './saves'
+        filename = 'image.png'
+        path = os.path.join(save_dir, filename)
+        print(path)
+        if path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
-            img.save(filename)
+            img.save(path)
 
 
 if __name__ == '__main__':

@@ -38,23 +38,21 @@ class GUI:
         self.__username = username
 
     def display_login_window(self):
-        login_window = LoginWindow(self)
-        login_window.set_GUI(self)
+        LoginWindow(self)
 
     def display_waiting_window(self):
-        waiting_window = WaitingWindow(self)
-        waiting_window.set_GUI(self)
+        WaitingWindow(self)
 
     def display_game_window(self, reply_msg):
-        # print the player's role
+
         if reply_msg['role'] == Role.Drawer:
             print('You have been assigned the role of Drawer')
             # Create the drawing window
             # TODO
         elif reply_msg['role'] == Role.Guesser:
+            players = reply_msg['players_dict']
             print('You have been assigned the role of Guesser')
-            # Create the guessing window
-            # TODO
+            self.display_guesser_window(self.__username, players)
 
-    def display_guesser_window(self, username):
-        pass
+    def display_guesser_window(self, username, players):
+        GuesserWindow(self, username, players)

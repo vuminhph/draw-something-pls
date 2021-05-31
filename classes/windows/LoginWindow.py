@@ -100,9 +100,6 @@ class LoginWindow(DisplayWindow):
                               relwidth=1,
                               rely=0.8)
 
-    def set_GUI(self, GUI):
-        self._GUI = GUI
-
     def __go_ahead(self, username: str):
         # If login is successful, then destroy login window to the next window
         self._window.destroy()

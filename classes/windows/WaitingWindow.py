@@ -68,9 +68,6 @@ class WaitingWindow(DisplayWindow):
         self.__wait_logo_label.configure(image=frame)
         self._window.after(100, self.__update_frame, i)
 
-    def set_GUI(self, GUI):
-        self._GUI = GUI
-
     def __count_down(self):
         while self.__clock >= 0:
             time.sleep(1)
@@ -82,7 +79,10 @@ class WaitingWindow(DisplayWindow):
                 if reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
                     self.__clock = Duration.WAITING_FOR_PLAYERS
                 elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
-                    self._GUI.display_game_window(reply_msg)
-                    self._window.destroy()
-                    time.sleep(1)
+                    self._window.after(50, self.__start_game, (reply_msg))
                     return
+
+    def __start_game(self, reply_msg):
+        self._window.destroy()
+        time.sleep(1)
+        self._GUI.display_game_window(reply_msg)
