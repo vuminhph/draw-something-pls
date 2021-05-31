@@ -18,7 +18,7 @@ class Paint(object):
     WINDOW_BG = '#17202A'
     LINE_WIDTH_OFFSET = 3
     ERASER_WIDTH_OFFSET = 13
-    TIME_LIMIT = 10
+    TIME_LIMIT = 30
 
     # Called when an instance of the class is created
     def __init__(self):
