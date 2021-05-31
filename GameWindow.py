@@ -50,9 +50,8 @@ class GameWindow:
 
         # Player name
         self.__playerName = Label(self.__game_window,
-                                  font=("Arial", 20),
+                                  font=("Consolas", 20),
                                   text='Player: '+self.__username,
-                                  fg="red",
                                   bg="white",
                                   relief="ridge")
         self.__playerName.place(relheight=0.08,
@@ -66,8 +65,7 @@ class GameWindow:
 
         self.__msg_label = Label(self.__game_window,
                                  textvariable=self.__msg_title,
-                                 font=("Times New Roman", 20, "italic"),
-                                 fg="green",
+                                 font=("Consolas", 20, "italic"),
                                  bg="white",
                                  relief="ridge")
         self.__msg_label.place(relheight=0.08,
@@ -82,7 +80,6 @@ class GameWindow:
         self.__timer_label = Label(self.__game_window,
                                    textvariable=self.__timer,
                                    font=("Consolas", 35, "bold"),
-                                   fg="blue",
                                    bg="white",
                                    relief="ridge")
         self.__timer_label.place(relheight=0.08,
@@ -93,22 +90,21 @@ class GameWindow:
         # Scoreboard
         self.__scoreboard__label = Label(self.__game_window,
                                         text="Scoreboard",
-                                        font=("Arial", 14),
+                                        font=("Consolas", 16, "bold"),
                                         bg="black",
                                         fg="white")
         self.__scoreboard__label.place(relheight=0.05,
                                        relwidth=0.23,
                                        relx=0.01,
                                        rely=0.1)
-                                      
-        # self.__scoreboard_list = StringVar()
-        # self.__scoreboard_list.set("Table")
 
         self.__scoreboard__table = Text(self.__game_window,
-                                        font="Arial 14",
+                                        font="Consolas 14",
                                         relief="solid",
                                         state=DISABLED,
-                                        cursor="arrow")
+                                        cursor="arrow",
+                                        padx=5,
+                                        pady=5)
         self.__scoreboard__table.place(relheight=0.75,
                                        relwidth=0.23,
                                        relx=0.01,
@@ -133,7 +129,7 @@ class GameWindow:
                                                     height=2,
                                                     bg="#17202A",
                                                     fg="white",
-                                                    font="Arial 14",
+                                                    font="Consolas 14",
                                                     cursor="arrow",
                                                     state=DISABLED,
                                                     padx=2,
@@ -146,7 +142,7 @@ class GameWindow:
         # Answering place
         self.__answer_label = Label(self.__game_window,
                                     text="Your answer:",
-                                    font="Arial 14 bold",
+                                    font="Consolas 14 bold",
 									anchor=E)
         self.__answer_label.place(relheight=0.06,
 								  relwidth=0.23,
@@ -156,7 +152,7 @@ class GameWindow:
         self.__answer_entry = Entry(self.__game_window,
                                 bg="#2C3E50",
                                 fg="#EAECEE",
-                                font="Arial 14")
+                                font="Consolas 14")
         self.__answer_entry.place(relheight=0.06,
                               relwidth=0.45,
                               relx=0.25,
@@ -165,7 +161,7 @@ class GameWindow:
 
         self.__answer_send = Button(self.__game_window,
                                     text="Send",
-                                    font="Arial 12 bold",
+                                    font="Consolas 12 bold",
                                     width=20,
                                     bg="#ABB2B9",
                                     command=lambda: self.__send_answer(self.__answer_entry.get()))
@@ -174,32 +170,46 @@ class GameWindow:
                                relx=0.71,
                                rely=0.92)
         
+        # Add a mock dictionary      
+        players = {
+            'Hoang': '10',
+            'Hung': '15',
+            'Minh': '20'
+        }
+        self.__display_scoreboard(players)
+
         # Test showing the window
         self.__game_window.mainloop()
 
     def __send_answer(self, msg):
-        self.__chatRoom.configure(state=NORMAL)
         self.__display_answer('Hoang', msg)
         self.__answer_entry.delete(0, END)
-        self.__chatRoom.configure(state=DISABLED)
 
     def __display_answer(self, username, answer):
+        self.__chatRoom.configure(state=NORMAL)
         self.__chatRoom.insert(END, username + ': ' + answer + '\n\n')
+        self.__chatRoom.configure(state=DISABLED)
         self.__chatRoom.see(END)
     
-    def __display_leaderboard(self, scoreboard:list):
+    def __display_scoreboard(self, players_dict:dict):
         self.__scoreboard__table.configure(state=NORMAL)
-        self.__scoreboard__table.delete(0, END)
-        # Insert from scoreboard list
-        # TODO
+        self.__scoreboard__table.delete(0.0, END)
+        
+        # Insert from players dictionary
+        for user in players_dict.keys():
+            score = players_dict[user]
+            self.__scoreboard__table.insert(END, user + ': ' + score + '\n\n')
+
         self.__scoreboard__table.configure(state=DISABLED)
 
     def __reset_round(self):
         # Clear all answers of previous rounds
-        self.__chatRoom.delete(0, END)
+        self.__chatRoom.configure(state=NORMAL)
+        self.__chatRoom.delete(0.0, END)
+        self.__chatRoom.configure(state=DISABLED)
 
         # Update the scoreboard
-        self.__display_leaderboard()
+        # self.__display_scoreboard()
 
     def __wait_for_drawing(self):
         # Disable the Send button in the time of drawing
