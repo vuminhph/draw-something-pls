@@ -106,6 +106,7 @@ class Paint(object):
         self.old_x, self.old_y = None, None
 
     def save(self):
+        # path = './Pictures/'
         ps = self.c.postscript(colormode='color')
         filename = asksaveasfilename(defaultextension='.jpg')
         if filename:

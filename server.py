@@ -9,7 +9,6 @@ import json
 import random
 
 from _thread import *
-import threading
 
 # Variables
 MAX_PLAYERS = 5
@@ -19,8 +18,15 @@ UsersDatabase = {}  # Database of users and passwords information
 active_users = []  # A list of currently active users
 drawer_id = -1
 
+Word_list = []  # Database of all words
+
 
 def handle_request(user: User):
+    # A thread serving each client
+
+    # Arguments:
+    # -- user: the client's user object
+
     while True:
         data = user.get_connection().recv(2048)
 
@@ -76,8 +82,9 @@ def handle_request(user: User):
                     drawer_id = random.randint(0, MAX_PLAYERS - 1)
 
                 if active_users.index(user) == drawer_id:
+                    keyword = Word_list[random.randint(0, len(Word_list)-1)]
                     reply_msg = json.dumps(
-                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer})
+                        {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Drawer, 'keyword': keyword})
                 else:
                     reply_msg = json.dumps(
                         {'code': ApplicationCode.GAME_ASSIGN_ROLE, 'role': Role.Guesser})
@@ -90,7 +97,7 @@ def handle_request(user: User):
             #
 
 
-def login_authenticate(username, password):
+def login_authenticate(username: str, password: str):
     # check if given username and password is in the database
 
     # Arguments:
@@ -110,7 +117,7 @@ def login_authenticate(username, password):
     return ApplicationCode.LOGIN_SUCCESS
 
 
-def logout(user):
+def logout(user: User):
     # un-register user
 
     # Arguments:
@@ -134,13 +141,37 @@ def countdown(timer: Timer):
     return True
 
 
-def send_reply_msg(user, message):
+def send_reply_msg(user: User, message: str):
+    # Sends the reply message to client
+
+    # Arguments:
+    # -- user: the recipient client's user object
+    # -- message: the message to be sent
+
     print('Reply message sent to',
           user.get_connection().getpeername(), ':', message)
     user.get_connection().sendall(str.encode(message))
 
 
 def main():
+    # Load user database
+    with open('./users.csv') as f:
+        reader = csv.DictReader(f)
+
+        global UsersDatabase
+        UsersDatabase = {row['Username']: {'password': row['Password'],
+                                           'logged-in': False} for row in reader}
+        f.close()
+
+    # load word database
+    with open("./word_list.txt", "r") as f:
+        global Word_list
+        for line in f:
+            stripped_line = line.strip()
+            Word_list.append(stripped_line)
+
+        f.close()
+
     HOST = "127.0.0.1"
     PORT = 5555
 
@@ -153,16 +184,9 @@ def main():
 
     s.settimeout(1.0)
 
+    # only listens for a maximum of MAX_PLAYER connections
     s.listen(MAX_PLAYERS)
     print("Socket is listening on port", PORT)
-
-    # get list of users
-    with open('./users.csv') as f:
-        reader = csv.DictReader(f)
-
-        global UsersDatabase
-        UsersDatabase = {row['Username']: {'password': row['Password'],
-                                           'logged-in': False} for row in reader}
 
     while True:
         try:

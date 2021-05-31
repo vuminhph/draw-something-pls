@@ -5,8 +5,6 @@ from classes.Timer import Duration
 
 # import all the required modules
 from tkinter import *
-from tkinter import font
-from tkinter import ttk
 # from PIL import Image
 
 import time
@@ -28,7 +26,12 @@ class GUI:
         login_window = LoginWindow(self.__game_controller)
         login_window.set_GUI(self)
 
+        self.__game_window.protocol("WM_DELETE_WINDOW", self.__on_closing)
         self.__game_window.mainloop()
+
+    def __on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.__game_window.destroy()
 
     def set_username(self, username: str):
         self.__username = username
@@ -43,7 +46,7 @@ class GUI:
         self.__game_window.title("GAME ROOM #1")
         self.__game_window.resizable(width=False,
                                      height=False)
-        self.__game_window.configure(width=1024,
+        self.__game_window.configure(width=1366,
                                      height=768,
                                      bg="#17202A")
 
@@ -318,7 +321,11 @@ class WaitingWindow:
                     # print the player's role
                     if reply_msg['role'] == Role.Drawer:
                         print('You have been assigned the role of Drawer')
+                        # Create the drawing window
+                        # TODO
                     elif reply_msg['role'] == Role.Guesser:
                         print('You have been assigned the role of Guesser')
+                        # Create the guessing window
+                        # TODO
                     self.__window.destroy()
                     time.sleep(1)

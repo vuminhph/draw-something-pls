@@ -16,3 +16,6 @@ class ApplicationCode():
     GAME_START_REQUEST = '31'
     GAME_ASSIGN_ROLE = '310'
     CONTINUE_WAITING = '311'
+
+    # Logout code
+    LOGOUT_REQUEST = ''
