@@ -1,8 +1,11 @@
 from tkinter import *
 from tkinter.colorchooser import askcolor
 from tkinter.filedialog import asksaveasfile, asksaveasfilename
+from tkinter import messagebox
+import tkinter.ttk as ttk
 import io
 import os
+from tkinter.tix import WINDOW
 from PIL import Image
 
 class Paint(object):
@@ -11,18 +14,21 @@ class Paint(object):
     DEFAULT_COLOR = 'black'
     DEFAULT_WIDTH = 600
     DEFAULT_HEIGHT = 600
-    DEFAULT_BG = 'white'
+    CANVAS_BG = 'white'
+    WINDOW_BG = '#2f4a57'
     LINE_WIDTH_OFFSET = 3
     ERASER_WIDTH_OFFSET = 13
-    TIME_LIMIT = 10
+    TIME_LIMIT = 60
 
     # Called when an instance of the class is created
     def __init__(self):
         self.root = Tk()
+        self.root.geometry("600x700")
         self.root.title("Paint")
+        self.root.configure(bg=self.WINDOW_BG)
 
         self.pen_button = Button(self.root, text='Pen', command=self.use_pen)
-        self.pen_button.grid(row=0, column=0)
+        self.pen_button.grid(row=0, column=0, pady=5)
 
         self.eraser_button = Button(
             self.root, text='Eraser', command=self.use_eraser)
@@ -36,27 +42,28 @@ class Paint(object):
             self.root, text='Clear all', command=self.clear_all)
         self.reset_button.grid(row=0, column=3)
 
-        self.choose_size_button = Scale(
-            self.root, from_=1, to=10, orient=HORIZONTAL)
-        self.choose_size_button.grid(row=1, column=0)
-
-        self.choose_eraser_size_button = Scale(
-            self.root, from_=1, to=10, orient=HORIZONTAL)
-        self.choose_eraser_size_button.grid(row=1, column=1)
-
         self.save_button = Button(self.root, text='Finish', command=self.quit)
         self.save_button.grid(row=0, column=4)
 
-        self.timerLabel = Label(self.root)
-        self.timerLabel.grid(row=1, column=2, columnspan=3)
+        self.choose_size_button = ttk.Scale(
+            self.root, from_=1, to=10, orient=HORIZONTAL)
+        self.choose_size_button.grid(row=1, column=0, pady=10)
+
+        self.choose_eraser_size_button = ttk.Scale(
+            self.root,from_=1, to=10, orient=HORIZONTAL)
+        self.choose_eraser_size_button.grid(row=1, column=1)
+
+        self.timerLabel = Label(self.root, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Helvatical bold',30))
+        self.timerLabel.grid(row=2, column=0, columnspan=5, pady=20)
         self.countdown()
 
-        self.c = Canvas(self.root, bg=self.DEFAULT_BG,
+        self.c = Canvas(self.root, bg=self.CANVAS_BG,
                         width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
-        self.c.grid(row=2, columnspan=5)
+        self.c.grid(row=3, columnspan=5)
 
         self.HAS_THREAD = False
         self.setup()
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.mainloop()
 
     
@@ -127,9 +134,10 @@ class Paint(object):
     def save(self):
         ps = self.c.postscript(colormode='color')
         # filename = asksaveasfilename(defaultextension='.jpg')
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
         save_dir = './saves'
         filename = 'image.png'
-        path = os.path.join(save_dir, filename)
+        path = os.path.join(cur_dir, save_dir, filename)
         print(path)
         if path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
@@ -139,6 +147,9 @@ class Paint(object):
         self.save()
         self.root.destroy()
 
+    def on_closing(self):
+        #when press the x button
+        self.quit()
 
 
 if __name__ == '__main__':
