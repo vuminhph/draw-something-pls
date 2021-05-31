@@ -186,8 +186,6 @@ class GameWindow:
     def __display_answer(self, username, answer):
         self.__chatRoom.insert(END, username + ': ' + answer + '\n\n')
         self.__chatRoom.see(END)
-        self.__chatRoom.tag_config("start", font="Arial 14 bold")
-        self.__chatRoom.tag_add()
     
     def __display_leaderboard(self, scoreboard:list):
         self.__scoreboard__table.configure(state=NORMAL)
