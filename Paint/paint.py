@@ -5,7 +5,6 @@ import io
 import os
 from PIL import Image
 
-
 class Paint(object):
 
     DEFAULT_PEN_SIZE = 5.0
@@ -15,11 +14,12 @@ class Paint(object):
     DEFAULT_BG = 'white'
     LINE_WIDTH_OFFSET = 3
     ERASER_WIDTH_OFFSET = 13
+    TIME_LIMIT = 10
 
     # Called when an instance of the class is created
     def __init__(self):
-
         self.root = Tk()
+        self.root.title("Paint")
 
         self.pen_button = Button(self.root, text='Pen', command=self.use_pen)
         self.pen_button.grid(row=0, column=0)
@@ -44,16 +44,34 @@ class Paint(object):
             self.root, from_=1, to=10, orient=HORIZONTAL)
         self.choose_eraser_size_button.grid(row=1, column=1)
 
-        self.save_button = Button(self.root, text='Save', command=self.save)
+        self.save_button = Button(self.root, text='Finish', command=self.quit)
         self.save_button.grid(row=0, column=4)
+
+        self.timerLabel = Label(self.root)
+        self.timerLabel.grid(row=1, column=2, columnspan=3)
+        self.countdown()
 
         self.c = Canvas(self.root, bg=self.DEFAULT_BG,
                         width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
         self.c.grid(row=2, columnspan=5)
 
+        self.HAS_THREAD = False
         self.setup()
         self.root.mainloop()
 
+    
+    def countdown(self):
+        self.TIME_LIMIT -= 1
+        if self.TIME_LIMIT > 0:
+            self.timerLabel.config(text=str(self.TIME_LIMIT))
+            if self.TIME_LIMIT <=5:
+                self.timerLabel.config(fg="red")
+            self.root.after(1000, self.countdown)
+        else:
+            self.quit()
+
+
+    
     def setup(self):
         self.old_x = None
         self.old_y = None
@@ -116,6 +134,11 @@ class Paint(object):
         if path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(path)
+    
+    def quit(self):
+        self.save()
+        self.root.destroy()
+
 
 
 if __name__ == '__main__':
