@@ -13,7 +13,7 @@ from _thread import *
 
 # Variables
 MAX_PLAYERS = 5
-MIN_PLAYERS = 2
+MIN_PLAYERS = 3
 
 UsersDatabase = {}  # Database of users and passwords information
 

@@ -6,7 +6,7 @@ import os
 from PIL import Image
 
 
-class Paint(object):
+class Paint():
 
     DEFAULT_PEN_SIZE = 5.0
     DEFAULT_COLOR = 'black'

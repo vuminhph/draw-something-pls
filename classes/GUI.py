@@ -1,10 +1,4 @@
 # import all the required modules
-from tkinter import *
-# from PIL import Image
-
-import time
-from _thread import *
-
 from classes.windows.LoginWindow import LoginWindow
 from classes.windows.WaitingWindow import WaitingWindow
 from classes.windows.GuesserWindow import GuesserWindow
@@ -13,8 +7,13 @@ from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration
 
+from paint import Paint  # For demo
+
+from tkinter import *
+# from PIL import Image
+import time
 # import threading
-# GUI class for the chat
+from _thread import *
 
 
 class GUI:
@@ -47,12 +46,15 @@ class GUI:
 
         if reply_msg['role'] == Role.Drawer:
             print('You have been assigned the role of Drawer')
-            # Create the drawing window
-            # TODO
+            self.__display_drawer_window()
+
         elif reply_msg['role'] == Role.Guesser:
             players = reply_msg['players_dict']
             print('You have been assigned the role of Guesser')
-            self.display_guesser_window(self.__username, players)
+            self.__display_guesser_window(self.__username, players)
 
-    def display_guesser_window(self, username, players):
+    def __display_guesser_window(self, username, players):
         GuesserWindow(self, username, players)
+
+    def __display_drawer_window(self):
+        Paint()
