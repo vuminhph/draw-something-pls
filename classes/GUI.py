@@ -7,7 +7,7 @@ from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration
 
-from paint import Paint  # For demo
+import Paint.paint  # For demo
 
 from tkinter import *
 # from PIL import Image
