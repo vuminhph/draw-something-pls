@@ -16,12 +16,12 @@ class ResultWindow(DisplayWindow):
         self.__results__label = Label(self._window,
                                       text="FINAL RESULTS",
                                       font=("Consolas", 35, "bold"))
-        self.__results__label.place() #TODO
+        # self.__results__label.place() #TODO
 
         self.__results__dict = Text(self._window,
                                     state=DISABLED,
                                     font=("Consolas", 35))
-        self.__results__dict.place() #TODO
+        # self.__results__dict.place() #TODO
 
         # Announce winner
         self.__winner = StringVar()
@@ -30,8 +30,8 @@ class ResultWindow(DisplayWindow):
                                         textvariable=self.__winner__announce,
                                         font=("Consolas", 40, "bold"),
                                         fg="red")
-        self.__winner__announce.place() #TODO
-        pass
+        # self.__winner__announce.place() #TODO
+        # pass
 
     def __get_final_result(self, gameWinner, scoreboard:dict):
         self.__results__dict.configure(state=NORMAL)
@@ -41,4 +41,4 @@ class ResultWindow(DisplayWindow):
         self.__results__dict.configure(state=DISABLED)
 
         self.__winner.set("The winner is: " + gameWinner + "!")
-        pass
+        # pass
