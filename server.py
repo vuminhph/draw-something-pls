@@ -77,7 +77,9 @@ def handle_request(user: User):
 
          # GAME START REQUEST
         if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
-            if len(active_users) >= MIN_PLAYERS:
+            num_of_users = len(active_users)
+
+            if num_of_users >= MIN_PLAYERS and num_of_users <= MAX_PLAYERS:
                 global drawer_id
 
                 code = ApplicationCode.GAME_ASSIGN_ROLE

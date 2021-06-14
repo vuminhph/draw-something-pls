@@ -4,7 +4,6 @@ from tkinter.filedialog import asksaveasfile, asksaveasfilename
 from tkinter import messagebox
 import tkinter.ttk as ttk
 import io
-import os
 from tkinter.tix import WINDOW
 from PIL import Image
 
@@ -138,10 +137,9 @@ class Paint():
         # path = './Pictures/'
         ps = self.c.postscript(colormode='color')
         # filename = asksaveasfilename(defaultextension='.jpg')
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
         save_dir = './saves'
         filename = 'image.png'
-        path = os.path.join(cur_dir, save_dir, filename)
+        path = save_dir + '/' + filename
         print(path)
         if path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
