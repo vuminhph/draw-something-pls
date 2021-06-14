@@ -131,6 +131,7 @@ def login_authenticate(user: User, username: str, password: str):
 
     UsersDatabase[username]['logged-in'] = True
     user.set_username(username)
+    active_users.append(user)
     return ApplicationCode.LOGIN_SUCCESS
 
 
@@ -211,7 +212,6 @@ def main():
             # Establish a connection with a client
             connection, addr = s.accept()
             newUser = User(connection)
-            active_users.append(newUser)
 
             print("Connected to: ", addr[0], ':', addr[1])
 

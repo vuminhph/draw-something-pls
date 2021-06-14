@@ -1,8 +1,9 @@
-from classes.windows.DisplayWindow import DisplayWindow
+import client.GUI
+from client.windows.DisplayWindow import DisplayWindow
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration
-import classes.GUI
+
 
 # import all the required modules
 from tkinter import *

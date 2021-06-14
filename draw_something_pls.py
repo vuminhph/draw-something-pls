@@ -1,4 +1,4 @@
-from classes.GUI import GUI
+from client.GUI import GUI
 
 
 def main():

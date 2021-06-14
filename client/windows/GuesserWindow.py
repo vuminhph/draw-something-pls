@@ -1,10 +1,11 @@
 # import all the required modules
-from classes.windows.DisplayWindow import DisplayWindow
+from client.windows.DisplayWindow import DisplayWindow
+import client.GUI
 from classes.Users import User
 import classes.enums.ApplicationCode
 import classes.enums.Role
 import classes.Timer
-import classes.GUI
+
 
 from os import stat
 from tkinter import *
