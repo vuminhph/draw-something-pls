@@ -1,5 +1,5 @@
-import client.GUI
-from client.windows.DisplayWindow import DisplayWindow
+import Client.GUI
+from Client.windows.DisplayWindow import DisplayWindow
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration

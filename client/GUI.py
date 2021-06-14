@@ -1,8 +1,8 @@
 # import all the required modules
-from client.windows.LoginWindow import LoginWindow
-from client.windows.WaitingWindow import WaitingWindow
-from client.windows.GuesserWindow import GuesserWindow
-from client.GameController import GameController
+from Client.windows.LoginWindow import LoginWindow
+from Client.windows.WaitingWindow import WaitingWindow
+from Client.windows.GuesserWindow import GuesserWindow
+from Client.GameController import GameController
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration

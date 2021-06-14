@@ -1,6 +1,6 @@
 # import all the required modules
-from client.windows.DisplayWindow import DisplayWindow
-import client.GUI
+from Client.windows.DisplayWindow import DisplayWindow
+import Client.GUI
 from classes.Users import User
 import classes.enums.ApplicationCode
 import classes.enums.Role

@@ -1,8 +1,9 @@
 from classes.Users import ServerUser as User
-
 from classes.Timer import Timer, Duration
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
+
+from Server.GameLogic import GameLogic
 
 import socket
 import csv
@@ -20,7 +21,7 @@ UsersDatabase = {}  # Database of users and passwords information
 active_users = []  # A list of currently active users
 drawer_id = -1
 
-Word_list = []  # Database of all words
+gameLogic = None
 
 
 def handle_request(user: User):
@@ -80,25 +81,38 @@ def handle_request(user: User):
             num_of_users = len(active_users)
 
             if num_of_users >= MIN_PLAYERS and num_of_users <= MAX_PLAYERS:
-                global drawer_id
 
+                # Role assignment and game logic instatiation
+                if active_users.index(user) == 0:
+                    global drawer_id
+                    global gameLogic
+                    drawer_id = random.randint(0, len(active_users) - 1)
+                    gameLogic = GameLogic()
+                #
+
+                # Create the reply message
                 code = ApplicationCode.GAME_ASSIGN_ROLE
                 players_dict = {}
 
-                # Initalize the client list
+                # Initalize the player dictionary
                 for cur_user in active_users:
                     players_dict[cur_user.get_username()] = '0'
+                #
 
-                # Role assignment
-                if active_users.index(user) == 0:
-                    drawer_id = random.randint(0, len(active_users) - 1)
-
+                reply_json = {
+                    'code': code,
+                }
                 if active_users.index(user) == drawer_id:
-                    reply_msg = json.dumps(
-                        {'code': code, 'role': Role.Drawer})
+                    # The player is selected as a drawer
+                    reply_json['role'] = Role.Drawer
+                    reply_msg = json.dumps(reply_json)
                 else:
-                    reply_msg = json.dumps(
-                        {'code': code, 'role': Role.Guesser, 'players_dict': players_dict})
+                    # The player is selected as a guesser
+                    reply_json['role'] = Role.Guesser
+                    reply_json['players_dict'] = players_dict
+                    reply_msg = json.dumps(reply_json)
+                ##
+
             else:
                 reply_msg = json.dumps(
                     {'code': ApplicationCode.CONTINUE_WAITING})
@@ -180,15 +194,6 @@ def main():
         global UsersDatabase
         UsersDatabase = {row['Username']: {'password': row['Password'],
                                            'logged-in': False} for row in reader}
-        f.close()
-
-    # load word database
-    with open("./word_list.txt", "r") as f:
-        global Word_list
-        for line in f:
-            stripped_line = line.strip()
-            Word_list.append(stripped_line)
-
         f.close()
 
     HOST = "127.0.0.1"
