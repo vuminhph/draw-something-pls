@@ -1,14 +1,18 @@
+import Client.GUI
+from Client.windows.DisplayWindow import DisplayWindow
+
 from tkinter import *
 from tkinter.colorchooser import askcolor
 from tkinter.filedialog import asksaveasfile, asksaveasfilename
 from tkinter import messagebox
 import tkinter.ttk as ttk
 import io
+import os
 from tkinter.tix import WINDOW
 from PIL import Image
 
 
-class Paint():
+class Paint(DisplayWindow):
     DEFAULT_PEN_SIZE = 5.0
     DEFAULT_COLOR = 'black'
     DEFAULT_WIDTH = 576
@@ -20,61 +24,62 @@ class Paint():
     TIME_LIMIT = 30
 
     # Called when an instance of the class is created
-    def __init__(self):
-        self.__root = Tk()
-        self.__root.geometry("576x760")
-        self.__root.title("Paint")
-        self.__root.configure(bg=self.WINDOW_BG)
-        self.__root.resizable(False, False)
+    def __init__(self, GUI):
+        super().__init__(GUI)
+
+        self._window.geometry("576x760")
+        self._window.title("Paint")
+        self._window.configure(bg=self.WINDOW_BG)
+        self._window.resizable(False, False)
 
         self.__style = ttk.Style()
         self.__style.configure("myStyle.Horizontal.TScale",
-                             background=self.WINDOW_BG)
+                               background=self.WINDOW_BG)
 
         self.__pen_button = Button(
-            self.__root, height=1, width=7, bg='#eba134', text='Pen', command=self.__use_pen, font='Consolas')
+            self._window, height=1, width=7, bg='#eba134', text='Pen', command=self.__use_pen, font='Consolas')
         self.__pen_button.grid(row=0, column=0, pady=8)
 
         self.__eraser_button = Button(
-            self.__root, height=1, width=7, bg='#de7c7c', text='Eraser', command=self.__use_eraser, font='Consolas')
+            self._window, height=1, width=7, bg='#de7c7c', text='Eraser', command=self.__use_eraser, font='Consolas')
         self.__eraser_button.grid(row=0, column=1)
 
         self.__color_button = Button(
-            self.__root, height=1, width=7, bg='#8ad190', text='Color', command=self.__choose_color, font='Consolas')
+            self._window, height=1, width=7, bg='#8ad190', text='Color', command=self.__choose_color, font='Consolas')
         self.__color_button.grid(row=0, column=2)
 
         self.__reset_button = Button(
-            self.__root, height=1, width=7, bg='#815f96', text='Clear', command=self.__clear_all, font='Consolas')
+            self._window, height=1, width=7, bg='#815f96', text='Clear', command=self.__clear_all, font='Consolas')
         self.__reset_button.grid(row=0, column=3)
 
-        # self.save_button = Button(self.__root, height=1, width=4, bg='#e8b443', text='Finish', command=self.quit)
+        # self.save_button = Button(self._window, height=1, width=4, bg='#e8b443', text='Finish', command=self.quit)
         # self.save_button.grid(row=0, column=4)
 
         self.__choose_size_slide = ttk.Scale(
-            self.__root, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
+            self._window, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
         self.__choose_size_slide.grid(row=1, column=0, pady=10)
 
         self.__choose_eraser_size_button = ttk.Scale(
-            self.__root, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
+            self._window, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
         self.__choose_eraser_size_button.grid(row=1, column=1)
 
         self.__timerLabel = Label(
-            self.__root, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
+            self._window, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
         self.__timerLabel.grid(row=2, column=0, columnspan=4, pady=5)
         self.countdown()
 
-        self.__canvas = Canvas(self.__root, bg=self.CANVAS_BG,
-                        width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
+        self.__canvas = Canvas(self._window, bg=self.CANVAS_BG,
+                               width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
         self.__canvas.grid(row=3, columnspan=4)
 
         self.kw = StringVar()
-        self.__keyword = Label(self.__root, textvariable=self.kw, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font='Consolas 20 bold')
+        self.__keyword = Label(self._window, textvariable=self.kw,
+                               bg=self.WINDOW_BG, fg=self.CANVAS_BG, font='Consolas 20 bold')
         self.__keyword.grid(row=4, columnspan=4)
 
         self.HAS_THREAD = False
         self.__setup()
-        self.__root.protocol("WM_DELETE_WINDOW", self.__on_closing)
-        self.__root.mainloop()
+        self._window.mainloop()
 
     def countdown(self):
         self.TIME_LIMIT -= 1
@@ -82,7 +87,7 @@ class Paint():
             self.__timerLabel.config(text='<< ' + str(self.TIME_LIMIT) + ' >>')
             if self.TIME_LIMIT <= 5:
                 self.__timerLabel.config(fg="red")
-            self.__root.after(1000, self.countdown)
+            self._window.after(1000, self.countdown)
         else:
             self.__quit()
 
@@ -126,12 +131,12 @@ class Paint():
         if self.__old_x and self.__old_y:
             if self.__eraser_on:
                 self.__canvas.create_line(self.__old_x, self.__old_y, event.x, event.y,
-                                   width=self.__line_width+self.ERASER_WIDTH_OFFSET, fill=paint_color,
-                                   capstyle=ROUND, smooth=TRUE, splinesteps=36)
+                                          width=self.__line_width+self.ERASER_WIDTH_OFFSET, fill=paint_color,
+                                          capstyle=ROUND, smooth=TRUE, splinesteps=36)
             else:
                 self.__canvas.create_line(self.__old_x, self.__old_y, event.x, event.y,
-                                   width=self.__line_width+self.LINE_WIDTH_OFFSET, fill=paint_color,
-                                   capstyle=ROUND, smooth=TRUE, splinesteps=36)
+                                          width=self.__line_width+self.LINE_WIDTH_OFFSET, fill=paint_color,
+                                          capstyle=ROUND, smooth=TRUE, splinesteps=36)
         self.__old_x = event.x
         self.__old_y = event.y
 
@@ -142,9 +147,10 @@ class Paint():
         # path = './Pictures/'
         ps = self.__canvas.postscript(colormode='color')
         # filename = asksaveasfilename(defaultextension='.jpg')
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
         save_dir = './saves'
         filename = 'image.png'
-        path = save_dir + '/' + filename
+        path = os.path.join(cur_dir, save_dir, filename)
         print(path)
         if path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
@@ -152,11 +158,7 @@ class Paint():
 
     def __quit(self):
         self.__save()
-        self.__root.destroy()
-
-    def __on_closing(self):
-        # when press the x button
-        self.__quit()
+        self._window.destroy()
 
 
 if __name__ == '__main__':
