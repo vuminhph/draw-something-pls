@@ -72,10 +72,13 @@ class LoginWindow(DisplayWindow):
         self.go = Button(self._window,
                          text="CONTINUE",
                          font="Helvetica 14 bold",
-                         command=lambda: self.__login())
+                         command=self.__login)
 
         self.go.place(relx=0.4,
                       rely=0.6)
+
+        # Press Enter to log in
+        self._window.bind('<Return>', lambda e: self.__login())
         self._window.mainloop()
 
     def __login(self):

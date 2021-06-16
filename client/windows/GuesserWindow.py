@@ -156,6 +156,8 @@ class GuesserWindow(DisplayWindow):
                                  rely=0.92)
 
         self.__display_scoreboard(player_dict)
+        # Press Enter to send answer
+        self._window.bind('<Return>', lambda e: self.__send_answer(self.__answer_entry.get()))
 
         # Test showing the window
         self._window.mainloop()
