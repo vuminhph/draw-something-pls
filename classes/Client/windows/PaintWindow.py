@@ -1,5 +1,5 @@
-import Client.GUI
-from Client.windows.DisplayWindow import DisplayWindow
+import classes.Client.GUI
+from classes.Client.windows.DisplayWindow import DisplayWindow
 
 from tkinter import *
 from tkinter.colorchooser import askcolor
@@ -12,7 +12,7 @@ from tkinter.tix import WINDOW
 from PIL import Image
 
 
-class Paint(DisplayWindow):
+class PaintWindow(DisplayWindow):
     DEFAULT_PEN_SIZE = 5.0
     DEFAULT_COLOR = 'black'
     DEFAULT_WIDTH = 576
@@ -24,7 +24,7 @@ class Paint(DisplayWindow):
     TIME_LIMIT = 30
 
     # Called when an instance of the class is created
-    def __init__(self, GUI):
+    def __init__(self, GUI, keyword):
         super().__init__(GUI)
 
         self._window.geometry("576x760")
@@ -66,28 +66,40 @@ class Paint(DisplayWindow):
         self.__timerLabel = Label(
             self._window, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
         self.__timerLabel.grid(row=2, column=0, columnspan=4, pady=5)
-        self.countdown()
+        self.__countdown()
 
         self.__canvas = Canvas(self._window, bg=self.CANVAS_BG,
                                width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
         self.__canvas.grid(row=3, columnspan=4)
 
-        self.kw = StringVar()
+        self.kw = StringVar(value=keyword)
         self.__keyword = Label(self._window, textvariable=self.kw,
                                bg=self.WINDOW_BG, fg=self.CANVAS_BG, font='Consolas 20 bold')
         self.__keyword.grid(row=4, columnspan=4)
 
-        self.HAS_THREAD = False
         self.__setup()
         self._window.mainloop()
 
-    def countdown(self):
+    def __warm_up_countdown(self):
         self.TIME_LIMIT -= 1
+
+        WARM_UP_TIME_LIMIT = 3
+
         if self.TIME_LIMIT > 0:
-            self.__timerLabel.config(text='<< ' + str(self.TIME_LIMIT) + ' >>')
+            self.__timerLabel.config(str(self.TIME_LIMIT))
             if self.TIME_LIMIT <= 5:
                 self.__timerLabel.config(fg="red")
-            self._window.after(1000, self.countdown)
+            self._window.after(1000, self.__warm_up_countdown)
+        else:
+            self.__countdown()
+
+    def __countdown(self):
+        if self.TIME_LIMIT > 0:
+            self.__timerLabel.config(str(self.TIME_LIMIT))
+            self.TIME_LIMIT -= 1
+            if self.TIME_LIMIT <= 5:
+                self.__timerLabel.config(fg="red")
+            self._window.after(1000, self.__countdown)
         else:
             self.__quit()
 
@@ -148,7 +160,7 @@ class Paint(DisplayWindow):
         ps = self.__canvas.postscript(colormode='color')
         # filename = asksaveasfilename(defaultextension='.jpg')
         cur_dir = os.path.dirname(os.path.abspath(__file__))
-        save_dir = './saves'
+        save_dir = '../../Paint/saves'
         filename = 'image.png'
         path = os.path.join(cur_dir, save_dir, filename)
         print(path)
@@ -156,10 +168,13 @@ class Paint(DisplayWindow):
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(path)
 
+    def _on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.__save()
+            self._window.destroy()
+            self._GUI.get_game_window().destroy()
+
     def __quit(self):
         self.__save()
         self._window.destroy()
-
-
-if __name__ == '__main__':
-    Paint()
+        self._GUI.get_game_window().destroy()

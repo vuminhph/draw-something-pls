@@ -1,4 +1,4 @@
-from Client.Communicator import Communicator
+from classes.Client.Communicator import Communicator
 from classes.enums.ApplicationCode import ApplicationCode
 
 import json

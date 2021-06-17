@@ -1,9 +1,5 @@
-from Client.windows.DisplayWindow import DisplayWindow
-import Client.GUI
-import classes.enums.ApplicationCode
-import classes.enums.Role
-import classes.Timer
-
+from classes.Client.windows.DisplayWindow import DisplayWindow
+import classes.Client.GUI
 
 from tkinter import *
 from tkinter import messagebox

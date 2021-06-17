@@ -1,3 +1,5 @@
+import random
+
 
 class GameLogic():
     def __init__(self):
@@ -12,3 +14,7 @@ class GameLogic():
 
         print(self.__word_list[0])
         print('ok')
+
+    def get_a_keyword(self):
+        index = random.randint(0, len(self.__word_list) - 1)
+        return self.__word_list[index]

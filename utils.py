@@ -24,3 +24,12 @@ def singleton(class_):
             instances[class_] = class_(*args, **kwargs)
         return instances[class_]
     return getinstance
+
+
+def run_once(f):
+    def wrapper(*args, **kwargs):
+        if not wrapper.has_run:
+            wrapper.has_run = True
+            return f(*args, **kwargs)
+    wrapper.has_run = False
+    return wrapper

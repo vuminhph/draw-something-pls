@@ -1,9 +1,10 @@
 from classes.Users import ServerUser as User
-from classes.Timer import Timer, Duration
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
+from classes.enums.Duration import Duration
 
-from Server.GameLogic import GameLogic
+from classes.Server.Timer import Timer
+from classes.Server.GameLogic import GameLogic
 
 import socket
 import csv
@@ -14,12 +15,15 @@ from _thread import *
 
 # Variables
 MAX_PLAYERS = 5
-MIN_PLAYERS = 3
+MIN_PLAYERS = 2
 
 UsersDatabase = {}  # Database of users and passwords information
 
+timer = None
+
 active_users = []  # A list of currently active users
 drawer_id = -1
+drawer_appointed = False
 
 gameLogic = None
 
@@ -63,17 +67,21 @@ def handle_request(user: User):
 
         # WAIT TIME REQUEST
         if received_msg['code'] == ApplicationCode.WAIT_TIME_REQUEST:
-            # A singleton timer object
-            timer = Timer(Duration.WAITING_FOR_PLAYERS)
+            global timer
 
-            # The first player in the room starts the waiting countdown
+            print(f"user's index: {active_users.index(user)}")
             if active_users.index(user) == 0:
-                start_new_thread(countdown, (timer, ))
+                timer = Timer(Duration.WAITING_FOR_PLAYERS)
+                timer.start_countdown()
 
             # Reply with the current time
             reply_msg = json.dumps(
                 {'code': ApplicationCode.START_WAITING, 'current_time': timer.get_curtime()})
             send_reply_msg(user, reply_msg)
+
+            # The first player in the room starts the waiting countdown
+            # if active_users.index(user) == 0:
+            #     countdown(timer)
         #
 
          # GAME START REQUEST
@@ -81,14 +89,15 @@ def handle_request(user: User):
             num_of_users = len(active_users)
 
             if num_of_users >= MIN_PLAYERS and num_of_users <= MAX_PLAYERS:
-
+                global drawer_id
+                global drawer_appointed
                 # Role assignment and game logic instatiation
-                if active_users.index(user) == 0:
-                    global drawer_id
+                if not drawer_appointed:
+                    print(f"Drawer's index: {drawer_id}")
                     global gameLogic
                     drawer_id = random.randint(0, len(active_users) - 1)
                     gameLogic = GameLogic()
-                #
+                    drawer_appointed = True
 
                 # Create the reply message
                 code = ApplicationCode.GAME_ASSIGN_ROLE
@@ -104,6 +113,9 @@ def handle_request(user: User):
                 }
                 if active_users.index(user) == drawer_id:
                     # The player is selected as a drawer
+                    keyword = gameLogic.get_a_keyword()
+
+                    reply_json['keyword'] = keyword
                     reply_json['role'] = Role.Drawer
                     reply_msg = json.dumps(reply_json)
                 else:
@@ -111,13 +123,16 @@ def handle_request(user: User):
                     reply_json['role'] = Role.Guesser
                     reply_json['players_dict'] = players_dict
                     reply_msg = json.dumps(reply_json)
+
+                # Stop the timer
+                timer.stop_clock()
                 ##
 
             else:
                 reply_msg = json.dumps(
                     {'code': ApplicationCode.CONTINUE_WAITING})
-                if active_users.index(user) == 0:
-                    start_new_thread(countdown, (timer,))
+                # if active_users.index(user) == 0:
+                #     countdown(timer)
 
             send_reply_msg(user, reply_msg)
             #
@@ -160,18 +175,10 @@ def logout(user: User):
         UsersDatabase[user.get_username()]['logged-in'] = False
     active_users.remove(user)
 
+    print(f'number of active users: {len(active_users)}')
 
-def countdown(timer: Timer):
-    # wait for timer to finish counting down, then destroy thread
-
-    # Arguments:
-    # -- timer: timer object init before creating the thread
-
-    # Returns:
-    # True, which destroy the thread
-
-    timer.start_countdown()
-    return True
+    if len(active_users) == 0:
+        timer.stop_clock()
 
 
 def send_reply_msg(user: User, message: str):

@@ -1,13 +1,13 @@
 # import all the required modules
-from Client.windows.LoginWindow import LoginWindow
-from Client.windows.WaitingWindow import WaitingWindow
-from Client.windows.GuesserWindow import GuesserWindow
-from Client.GameController import GameController
+from classes.Client.windows.LoginWindow import LoginWindow
+from classes.Client.windows.WaitingWindow import WaitingWindow
+from classes.Client.windows.GuesserWindow import GuesserWindow
+from classes.Client.windows.PaintWindow import PaintWindow
+from classes.Client.GameController import GameController
+
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
-from classes.Timer import Duration
 
-from Paint.paint import Paint  # For demo
 
 from tkinter import *
 # from PIL import Image
@@ -46,15 +46,16 @@ class GUI:
 
         if reply_msg['role'] == Role.Drawer:
             print('You have been assigned the role of Drawer')
-            self.__display_drawer_window()
+            keyword = reply_msg['keyword']
+            self.__display_drawer_window(keyword)
 
         elif reply_msg['role'] == Role.Guesser:
-            players = reply_msg['players_dict']
             print('You have been assigned the role of Guesser')
+            players = reply_msg['players_dict']
             self.__display_guesser_window(self.__username, players)
 
     def __display_guesser_window(self, username, players):
         GuesserWindow(self, username, players)
 
-    def __display_drawer_window(self):
-        Paint()
+    def __display_drawer_window(self, keyword):
+        PaintWindow(self, keyword)

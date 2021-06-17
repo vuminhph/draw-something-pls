@@ -1,8 +1,8 @@
-import Client.GUI
-from Client.windows.DisplayWindow import DisplayWindow
+import classes.Client.GUI
+from classes.Client.windows.DisplayWindow import DisplayWindow
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
-from classes.Timer import Duration
+from classes.enums.Duration import Duration
 
 
 # import all the required modules
@@ -53,11 +53,12 @@ class WaitingWindow(DisplayWindow):
                                      relheight=0.25,
                                      rely=0.75)
 
-        # Set the main loop
-        self.__thread_created = False
+        # self.__thread_created = False
+        # start_new_thread(self.__count_down, ())
+
+        self.__count_down()
         self._window.after(0, self.__update_frame, 0)
 
-        start_new_thread(self.__count_down, ())
         self._window.mainloop()
 
     def __update_frame(self, i):
@@ -70,18 +71,20 @@ class WaitingWindow(DisplayWindow):
         self._window.after(100, self.__update_frame, i)
 
     def __count_down(self):
-        while self.__clock >= 0:
-            time.sleep(1)
-            self.__clock -= 1
-            self.__timer.set(str(self.__clock))
+        timer_text = str(int(round(self.__clock, 0)))
+        self.__timer.set(timer_text)
+        self.__clock -= 0.1
 
-            if self.__clock == 0:
-                reply_msg = self._game_controller.start_game_request()
-                if reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
-                    self.__clock = Duration.WAITING_FOR_PLAYERS
-                elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
-                    self._window.after(50, self.__start_game, (reply_msg))
-                    return
+        if self.__clock > 0:
+            self._window.after(100, self.__count_down)
+        else:
+            reply_msg = self._game_controller.start_game_request()
+            if reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
+                self.__clock = Duration.WAITING_FOR_PLAYERS
+                self._window.after(0, self.__count_down)
+            elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
+                self._window.after(50, self.__start_game, (reply_msg))
+                return
 
     def __start_game(self, reply_msg):
         self._window.destroy()

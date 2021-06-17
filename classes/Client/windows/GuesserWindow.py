@@ -1,10 +1,7 @@
 # import all the required modules
-from Client.windows.DisplayWindow import DisplayWindow
-import Client.GUI
+from classes.Client.windows.DisplayWindow import DisplayWindow
+import classes.Client.GUI
 from classes.Users import User
-import classes.enums.ApplicationCode
-import classes.enums.Role
-import classes.Timer
 
 
 from os import stat
@@ -157,7 +154,8 @@ class GuesserWindow(DisplayWindow):
 
         self.__display_scoreboard(player_dict)
         # Press Enter to send answer
-        self._window.bind('<Return>', lambda e: self.__send_answer(self.__answer_entry.get()))
+        self._window.bind('<Return>', lambda e: self.__send_answer(
+            self.__answer_entry.get()))
 
         # Test showing the window
         self._window.mainloop()
