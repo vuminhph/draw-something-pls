@@ -17,5 +17,13 @@ class ApplicationCode():
     GAME_ASSIGN_ROLE = '310'
     CONTINUE_WAITING = '311'
 
+    # Game Logic codes
+    SEND_IMAGE_REQUEST = '32'
+    READY_TO_RECEIVE_IMAGE = '320'
+    SEND_IMAGE = '321'
+    IMAGE_RECEIVED = '3210'
+    IMAGE_PACKAGES_LOSS = '3211'
+    BROADCAST_IMAGE = '322'
+
     # Logout code
     LOGOUT = '40'

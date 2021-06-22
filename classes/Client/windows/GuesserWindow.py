@@ -157,7 +157,8 @@ class GuesserWindow(DisplayWindow):
         self._window.bind('<Return>', lambda e: self.__send_answer(
             self.__answer_entry.get()))
 
-        # Test showing the window
+        # TODO: Block input from player while waiting to receive image
+
         self._window.mainloop()
 
     def __send_answer(self, msg):
@@ -180,6 +181,9 @@ class GuesserWindow(DisplayWindow):
             self.__scoreboard__table.insert(END, user + ': ' + score + '\n\n')
 
         self.__scoreboard__table.configure(state=DISABLED)
+
+    def __receive_image(self):
+        self._game_controller.receive_message()
 
     def __reset_round(self):
         # Clear all answers of previous rounds

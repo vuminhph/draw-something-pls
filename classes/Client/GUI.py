@@ -33,6 +33,9 @@ class GUI:
     def get_game_window(self):
         return self.__game_window
 
+    def get_username(self):
+        return self.__username
+
     def set_username(self, username: str):
         self.__username = username
 

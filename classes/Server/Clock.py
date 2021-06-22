@@ -15,7 +15,7 @@ def run_once(f):
     return wrapper
 
 
-class Timer:
+class Clock:
     def __init__(self, t):
         self.__time_start = self.__time_cur = t
         self.__run_clock = True
@@ -43,26 +43,3 @@ class Timer:
 
     def stop_clock(self):
         self.__run_clock = False
-
-# For testing
-
-
-def func(clock):
-    clock.start_countdown()
-    time.sleep(5)
-    print('hi')
-
-
-def stop_func(thread, clock):
-    thread = start_new_thread(func, (clock,))
-    # print('ok')
-
-
-if __name__ == "__main__":
-    clock = Timer(5)
-    thread = start_new_thread(func, (clock,))
-    while True:
-        pass
-        # time.sleep(15)
-        # thread = start_new_thread(func, (clock,))
-        # thread = None

@@ -2,7 +2,7 @@ import classes.Client.GUI
 from classes.Client.windows.DisplayWindow import DisplayWindow
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
-from classes.enums.Duration import Duration
+from classes.enums.SystemConst import SystemConst
 
 
 # import all the required modules
@@ -80,7 +80,7 @@ class WaitingWindow(DisplayWindow):
         else:
             reply_msg = self._game_controller.start_game_request()
             if reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
-                self.__clock = Duration.WAITING_FOR_PLAYERS
+                self.__clock = SystemConst.WAITING_FOR_PLAYERS
                 self._window.after(0, self.__count_down)
             elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
                 self._window.after(50, self.__start_game, (reply_msg))

@@ -21,7 +21,8 @@ class PaintWindow(DisplayWindow):
     WINDOW_BG = '#17202A'
     LINE_WIDTH_OFFSET = 3
     ERASER_WIDTH_OFFSET = 13
-    TIME_LIMIT = 30
+    __TIME_LIMIT = 30
+    __WARM_UP___TIME_LIMIT = 5
 
     # Called when an instance of the class is created
     def __init__(self, GUI, keyword):
@@ -63,10 +64,11 @@ class PaintWindow(DisplayWindow):
             self._window, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
         self.__choose_eraser_size_button.grid(row=1, column=1)
 
+        self.__timer = StringVar()
         self.__timerLabel = Label(
-            self._window, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
+            self._window, textvariable=self.__timer, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
         self.__timerLabel.grid(row=2, column=0, columnspan=4, pady=5)
-        self.__countdown()
+        self.__warm_up_countdown()
 
         self.__canvas = Canvas(self._window, bg=self.CANVAS_BG,
                                width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
@@ -81,23 +83,22 @@ class PaintWindow(DisplayWindow):
         self._window.mainloop()
 
     def __warm_up_countdown(self):
-        self.TIME_LIMIT -= 1
+        self.__WARM_UP___TIME_LIMIT -= 1
 
-        WARM_UP_TIME_LIMIT = 3
-
-        if self.TIME_LIMIT > 0:
-            self.__timerLabel.config(str(self.TIME_LIMIT))
-            if self.TIME_LIMIT <= 5:
+        if self.__WARM_UP___TIME_LIMIT > 0:
+            self.__timer.set(str(self.__WARM_UP___TIME_LIMIT))
+            if self.__WARM_UP___TIME_LIMIT <= 5:
                 self.__timerLabel.config(fg="red")
             self._window.after(1000, self.__warm_up_countdown)
         else:
+            self.__timerLabel.config(fg="white")
             self.__countdown()
 
     def __countdown(self):
-        if self.TIME_LIMIT > 0:
-            self.__timerLabel.config(str(self.TIME_LIMIT))
-            self.TIME_LIMIT -= 1
-            if self.TIME_LIMIT <= 5:
+        if self.__TIME_LIMIT > 0:
+            self.__timer.set(str(self.__TIME_LIMIT))
+            self.__TIME_LIMIT -= 1
+            if self.__TIME_LIMIT <= 5:
                 self.__timerLabel.config(fg="red")
             self._window.after(1000, self.__countdown)
         else:
@@ -159,20 +160,19 @@ class PaintWindow(DisplayWindow):
         # path = './Pictures/'
         ps = self.__canvas.postscript(colormode='color')
         # filename = asksaveasfilename(defaultextension='.jpg')
-        cur_dir = os.path.dirname(os.path.abspath(__file__))
-        save_dir = '../../Paint/saves'
-        filename = 'image.png'
-        path = os.path.join(cur_dir, save_dir, filename)
-        print(path)
-        if path:
+        cur_dir = os.getcwd()
+        save_dir = './Paint/saves/send/'
+        filename = 'image_' + self._GUI.get_username() + '.png'
+        image_path = os.path.join(cur_dir, save_dir, filename)
+        print(image_path)
+        if image_path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
-            img.save(path)
+            img.save(image_path)
+        self._game_controller.send_picture(self._GUI.get_username())
 
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
-            self.__save()
-            self._window.destroy()
-            self._GUI.get_game_window().destroy()
+            self.__quit()
 
     def __quit(self):
         self.__save()

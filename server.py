@@ -1,9 +1,9 @@
 from classes.Users import ServerUser as User
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
-from classes.enums.Duration import Duration
+from classes.enums.SystemConst import SystemConst
 
-from classes.Server.Timer import Timer
+from classes.Server.Clock import Clock
 from classes.Server.GameLogic import GameLogic
 
 import socket
@@ -11,21 +11,22 @@ import csv
 import json
 import random
 
-from _thread import *
-
-# Variables
-MAX_PLAYERS = 5
-MIN_PLAYERS = 2
+from threading import Timer
+from _thread import start_new_thread
 
 UsersDatabase = {}  # Database of users and passwords information
 
-timer = None
+clock = None
 
 active_users = []  # A list of currently active users
 drawer_id = -1
 drawer_appointed = False
 
 gameLogic = None
+num_of_packages = 0
+package_wait_timeout_started = False
+image_broadcasted = False
+image_pkgs = []
 
 
 def handle_request(user: User):
@@ -35,7 +36,7 @@ def handle_request(user: User):
     # -- user: the client's user object
 
     while True:
-        data = user.get_connection().recv(2048)
+        data = user.get_connection().recv(SystemConst.MESSAGE_SIZE)
 
         if not data:
             logout(user)
@@ -58,37 +59,34 @@ def handle_request(user: User):
         # JOIN ROOM REQUEST
         #  if received_msg['code'] == '20':
         # # Check if number of player exceeds the maximum number of players
-            # if active_users.index(user) <= MAX_PLAYERS:
+            # if active_users.index(user) <= SystemConst.MAX_PLAYERS:
             #     reply_msg = json.dumps(
-            #         {'code': ApplicationCode.JOIN_ROOM_SUCCESS, 'cur_time': timer.get_curtime()})
+            #         {'code': ApplicationCode.JOIN_ROOM_SUCCESS, 'cur_time': clock.get_curtime()})
             # else:
             #     reply_msg = json.dumps({'code': ApplicationCode.JOIN_ROOM_ERR})
         #
 
         # WAIT TIME REQUEST
         if received_msg['code'] == ApplicationCode.WAIT_TIME_REQUEST:
-            global timer
+            global clock
 
             print(f"user's index: {active_users.index(user)}")
             if active_users.index(user) == 0:
-                timer = Timer(Duration.WAITING_FOR_PLAYERS)
-                timer.start_countdown()
+                clock = Clock(SystemConst.WAITING_FOR_PLAYERS)
+                clock.start_countdown()
 
             # Reply with the current time
             reply_msg = json.dumps(
-                {'code': ApplicationCode.START_WAITING, 'current_time': timer.get_curtime()})
+                {'code': ApplicationCode.START_WAITING, 'current_time': clock.get_curtime()})
             send_reply_msg(user, reply_msg)
 
-            # The first player in the room starts the waiting countdown
-            # if active_users.index(user) == 0:
-            #     countdown(timer)
         #
 
          # GAME START REQUEST
         if received_msg['code'] == ApplicationCode.GAME_START_REQUEST:
             num_of_users = len(active_users)
 
-            if num_of_users >= MIN_PLAYERS and num_of_users <= MAX_PLAYERS:
+            if num_of_users >= SystemConst.MIN_PLAYERS and num_of_users <= SystemConst.MAX_PLAYERS:
                 global drawer_id
                 global drawer_appointed
                 # Role assignment and game logic instatiation
@@ -124,22 +122,74 @@ def handle_request(user: User):
                     reply_json['players_dict'] = players_dict
                     reply_msg = json.dumps(reply_json)
 
-                # Stop the timer
-                timer.stop_clock()
+                # Stop the clock
+                clock.stop_clock()
                 ##
 
             else:
                 reply_msg = json.dumps(
                     {'code': ApplicationCode.CONTINUE_WAITING})
-                # if active_users.index(user) == 0:
-                #     countdown(timer)
 
             send_reply_msg(user, reply_msg)
             #
 
+        # RECEIVE IMAGE SEND REQUEST
+        if received_msg['code'] == ApplicationCode.SEND_IMAGE_REQUEST:
+            global num_of_packages
+            num_of_packages = received_msg['num_pkgs']
+            reply_msg = json.dumps(
+                {'code': ApplicationCode.READY_TO_RECEIVE_IMAGE})
+            send_reply_msg(user, reply_msg)
+        #
+
+        # RECEIVE AND BROADCAST IMAGE
+        if received_msg['code'] == ApplicationCode.SEND_IMAGE:
+            global image_pkgs
+            global image_broadcasted
+            global package_wait_timeout_started
+            image_pkgs.append(received_msg['image'])
+
+            num_pkgs_received = len(image_pkgs)
+            print("number of packages received: ", num_pkgs_received)
+
+            if num_pkgs_received == num_of_packages and not image_broadcasted:
+                print("All packages received")
+                image_broadcasted = True
+                for user in active_users:
+                    if active_users.index(user) != drawer_id:
+                        for package in image_pkgs:
+                            reply_msg = json.dumps(
+                                {'code': ApplicationCode.BROADCAST_IMAGE, 'image': package})
+                            send_reply_msg(user, reply_msg)
+
+            # Set a timeout to wait for all packages to be sent
+            if not package_wait_timeout_started:
+                package_wait_timeout_started = True
+                timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
+                              image_send_checkup, (user, ))
+                timer.start()
+        #
+
         # LOGOUT
         if received_msg['code'] == ApplicationCode.LOGOUT:
             logout(user)
+        #
+
+
+def request_image_broadcast(user):
+    pass
+
+
+def image_send_checkup(user):
+    # Check if all image packages have been received, send a failure message if not
+
+    global image_pkgs
+    global num_of_packages
+
+    if len(image_pkgs) != num_of_packages:
+        reply_msg = json.dumps(
+            {'code': ApplicationCode.IMAGE_PACKAGES_LOSS})
+        send_reply_msg(user, reply_msg)
 
 
 def login_authenticate(user: User, username: str, password: str):
@@ -178,7 +228,7 @@ def logout(user: User):
     print(f'number of active users: {len(active_users)}')
 
     if len(active_users) == 0:
-        timer.stop_clock()
+        clock.stop_clock()
 
 
 def send_reply_msg(user: User, message: str):
@@ -216,7 +266,7 @@ def main():
     s.settimeout(1.0)
 
     # only listens for a maximum of MAX_PLAYER connections
-    s.listen(MAX_PLAYERS)
+    s.listen(SystemConst.MAX_PLAYERS)
     print("Socket is listening on port", PORT)
 
     while True:
