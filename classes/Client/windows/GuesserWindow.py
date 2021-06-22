@@ -197,3 +197,11 @@ class GuesserWindow(DisplayWindow):
     def __wait_for_drawing(self):
         # Disable the Send button in the time of drawing
         self.__answer_send.config(state=DISABLED)
+
+    def __disable_answer(self):
+        self.__answer_entry.configure(state=DISABLED)
+        self.__answer_send.configure(state=DISABLED)
+
+    def __enable_answer(self):
+        self.__answer_entry.configure(state=NORMAL)
+        self.__answer_send.configure(state=NORMAL)
