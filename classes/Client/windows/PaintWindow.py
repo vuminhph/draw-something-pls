@@ -102,7 +102,7 @@ class PaintWindow(DisplayWindow):
                 self.__timerLabel.config(fg="red")
             self._window.after(1000, self.__countdown)
         else:
-            self.__quit()
+            self.__save()
 
     def __setup(self):
         self.__old_x = None
@@ -168,13 +168,13 @@ class PaintWindow(DisplayWindow):
         if image_path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(image_path)
-        self._game_controller.send_picture(self._GUI.get_username())
+        if self._game_controller.send_image(self._GUI.get_username()):
+            self.__close()
 
     def _on_closing(self):
-        if messagebox.askokcancel("Quit", "Do you want to quit?"):
-            self.__quit()
+        if messagebox.askokcancel("Quit", "Quitting will save your result. Do you want to quit?"):
+            self.__save()
 
-    def __quit(self):
-        self.__save()
+    def __close(self):
         self._window.destroy()
-        self._GUI.get_game_window().destroy()
+        self._GUI.get_game_window().destroy()  # TODO: Returns to Guesser window

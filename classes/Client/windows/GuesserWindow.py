@@ -42,11 +42,11 @@ class GuesserWindow(DisplayWindow):
                                 rely=0.01)
 
         # Message title
-        self.__msg_title = StringVar()
-        self.__msg_title.set("Message")
+        self.__keyword_label = StringVar()
+        self.display_keyword("The drawer is drawing...")
 
         self.__msg_label = Label(self._window,
-                                 textvariable=self.__msg_title,
+                                 textvariable=self.__keyword_label,
                                  font=("Consolas", 20, "italic"),
                                  bg="white",
                                  relief="ridge")
@@ -157,9 +157,11 @@ class GuesserWindow(DisplayWindow):
         self._window.bind('<Return>', lambda e: self.__send_answer(
             self.__answer_entry.get()))
 
-        # TODO: Block input from player while waiting to receive image
-
+        start_new_thread(self.__wait_for_drawing, ())
         self._window.mainloop()
+
+    def display_keyword(self, keyword: str):
+        self.__keyword_label.set(keyword)
 
     def __send_answer(self, msg):
         self.__display_answer('Hoang', msg)
@@ -182,9 +184,6 @@ class GuesserWindow(DisplayWindow):
 
         self.__scoreboard__table.configure(state=DISABLED)
 
-    def __receive_image(self):
-        self._game_controller.receive_message()
-
     def __reset_round(self):
         # Clear all answers of previous rounds
         self.__chatRoom.configure(state=NORMAL)
@@ -195,8 +194,11 @@ class GuesserWindow(DisplayWindow):
         # self.__display_scoreboard()
 
     def __wait_for_drawing(self):
-        # Disable the Send button in the time of drawing
-        self.__answer_send.config(state=DISABLED)
+        # Block input from player while waiting to receive image
+        self.__disable_answer()
+        if self._game_controller.receive_image(self._GUI.get_username()):
+            pass
+        #
 
     def __disable_answer(self):
         self.__answer_entry.configure(state=DISABLED)

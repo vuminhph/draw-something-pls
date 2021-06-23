@@ -20,13 +20,13 @@ clock = None
 
 active_users = []  # A list of currently active users
 drawer_id = -1
-drawer_appointed = False
+drawer_appointed = False  # TODO: reset ever y round
 
 gameLogic = None
 num_of_packages = 0
-package_wait_timeout_started = False
-image_broadcasted = False
-image_pkgs = []
+package_wait_timeout_started = False  # TODO: reset ever y round
+broadcast_request_sent = False  # TODO: reset ever y round
+image_pkgs = []  # TODO: reset ever y round
 
 
 def handle_request(user: User):
@@ -77,7 +77,8 @@ def handle_request(user: User):
 
             # Reply with the current time
             reply_msg = json.dumps(
-                {'code': ApplicationCode.START_WAITING, 'current_time': clock.get_curtime()})
+                {'code': ApplicationCode.START_WAITING,
+                    'current_time': round(clock.get_curtime(), 2)})
             send_reply_msg(user, reply_msg)
 
         #
@@ -142,25 +143,30 @@ def handle_request(user: User):
             send_reply_msg(user, reply_msg)
         #
 
-        # RECEIVE AND BROADCAST IMAGE
+        # RECEIVE IMAGE AND SENT BROADCAST REQUEST TO GUESSERS
         if received_msg['code'] == ApplicationCode.SEND_IMAGE:
             global image_pkgs
-            global image_broadcasted
+            global broadcast_request_sent
             global package_wait_timeout_started
             image_pkgs.append(received_msg['image'])
 
             num_pkgs_received = len(image_pkgs)
             print("number of packages received: ", num_pkgs_received)
 
-            if num_pkgs_received == num_of_packages and not image_broadcasted:
+            if num_pkgs_received == num_of_packages and not broadcast_request_sent:
                 print("All packages received")
-                image_broadcasted = True
+
+                broadcast_request_sent = True
                 for user in active_users:
                     if active_users.index(user) != drawer_id:
-                        for package in image_pkgs:
-                            reply_msg = json.dumps(
-                                {'code': ApplicationCode.BROADCAST_IMAGE, 'image': package})
-                            send_reply_msg(user, reply_msg)
+                        reply_msg = json.dumps(
+                            {'code': ApplicationCode.BROADCASE_IMAGE_REQUEST, 'num_pkgs': num_of_packages})
+                        send_reply_msg(user, reply_msg)
+                    else:
+                        reply_msg = json.dumps({
+                            'code': ApplicationCode.IMAGE_RECEIVED
+                        })
+                        send_reply_msg(user, reply_msg)
 
             # Set a timeout to wait for all packages to be sent
             if not package_wait_timeout_started:
@@ -170,14 +176,30 @@ def handle_request(user: User):
                 timer.start()
         #
 
-        # LOGOUT
+        if received_msg['code'] == ApplicationCode.READY_TO_BROADCAST_IMAGE:
+            broadcast_image(user)
+
+        if received_msg['code'] == ApplicationCode.BROADCAST_IMAGE_PACKAGES_LOSS:
+            broadcast_image(user)
+
+        if received_msg['code'] == ApplicationCode.BROADCAST_IMAGE_RECEIVED:
+            # TODO Implement Guesser Logic
+            pass
+
+            # LOGOUT
         if received_msg['code'] == ApplicationCode.LOGOUT:
             logout(user)
         #
 
 
-def request_image_broadcast(user):
-    pass
+def broadcast_image(user):
+    global image_pkgs
+    for package in image_pkgs:
+        reply_msg = json.dumps({
+            'code': ApplicationCode.BROADCAST_IMAGE,
+            'image': package
+        })
+        send_reply_msg(user, reply_msg)
 
 
 def image_send_checkup(user):

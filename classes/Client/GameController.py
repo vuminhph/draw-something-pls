@@ -2,6 +2,7 @@ from classes.Client.Communicator import Communicator
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.SystemConst import SystemConst
 
+from threading import Timer
 import os
 import json
 import base64
@@ -11,6 +12,11 @@ import math
 class GameController:
     def __init__(self, host: str, port: int):
         self.__communicator = Communicator(host, port)
+
+        self.__image_pkgs = []  # TODO: reset every round
+        self.__num_of_packages = 0  # TODO: reset every round
+        self.__package_wait_timeout_started = False  # TODO: reset every round
+        self.__waiting_for_packages = True  # TODO: reset every round
 
     def login(self, username: str, password: str):
         # Send a login request to the server and check if login is successful
@@ -54,8 +60,9 @@ class GameController:
         reply_msg = self.__communicator.receive_message()
         return reply_msg
 
-    def send_picture(self, username):
+    def send_image(self, username):
         # Called by the drawer window, sends the result image to the server
+        # Returns True if server receive image successfully
 
         cur_dir = os.getcwd()
         save_dir = './Paint/saves/send/'
@@ -63,7 +70,7 @@ class GameController:
         image_path = os.path.join(cur_dir, save_dir, filename)
 
         with open(image_path, "rb") as image:
-            f = str(base64.b64encode(image.read()))
+            f = base64.b64encode(image.read()).decode('utf-8')
             msg = {'code': ApplicationCode.SEND_IMAGE, 'image': ''}
             overhead = json.dumps(msg)
 
@@ -87,20 +94,82 @@ class GameController:
             # receive reply from server
             reply_msg = self.__communicator.receive_message()
 
-            if reply_msg['code'] == ApplicationCode.READY_TO_RECEIVE_IMAGE:
+            def send_image_packages():
                 msg = {}
                 msg['code'] = ApplicationCode.SEND_IMAGE
+                # Split image base64 string to fit packages
                 f_splitted = self.__split_str_n_times(f, num_of_packages)
                 for p in f_splitted:
                     msg['image'] = p
                     send_msg = json.dumps(msg)
                     self.__communicator.send_message(send_msg)
-            print("Image sent")
 
-    def receive_message(self):
+            if reply_msg['code'] == ApplicationCode.READY_TO_RECEIVE_IMAGE:
+                send_image_packages()
+                print("Image sent")
+
+            # listen for receive status
+            reply_msg = self.__communicator.receive_message()
+            if reply_msg['code'] == ApplicationCode.IMAGE_RECEIVED:
+                return True
+            elif reply_msg['code'] == ApplicationCode.IMAGE_PACKAGES_LOSS:
+                send_image_packages()
+
+    def receive_image(self, username):
+        # Receive the broadcast request and save number of packages
+        # Returns: True when image has been received successfully
+
         reply_msg = self.__communicator.receive_message()
-        if reply_msg['code'] == ApplicationCode.BROADCAST_IMAGE:
-            pass
+        if reply_msg['code'] == ApplicationCode.BROADCASE_IMAGE_REQUEST:
+            self.__num_of_packages = reply_msg['num_pkgs']
+            send_msg = json.dumps(
+                {'code': ApplicationCode.READY_TO_BROADCAST_IMAGE})
+            self.__communicator.send_message(send_msg)
+
+        # Receive the broadcasted image packages
+        for i in range(self.__num_of_packages):
+            if not self.__waiting_for_packages:
+                break
+
+            reply_msg = self.__communicator.receive_message()
+            if reply_msg['code'] == ApplicationCode.BROADCAST_IMAGE:
+                self.__image_pkgs.append(reply_msg['image'])
+
+                num_pkgs_received = len(self.__image_pkgs)
+                print("number of packages received: ", num_pkgs_received)
+
+                if num_pkgs_received == self.__num_of_packages:
+                    print("All packages received")
+                    cur_dir = os.getcwd()
+                    save_dir = './Paint/saves/receive/'
+                    filename = 'image' + '_' + username + '.png'
+                    image_path = os.path.join(cur_dir, save_dir, filename)
+
+                    with open(image_path, "wb+") as image:
+                        image_str = base64.b64decode(
+                            ''.join(self.__image_pkgs))
+                        print(image_str)
+                        image.write(image_str)
+
+                    send_msg = json.dumps(
+                        {'code': ApplicationCode.BROADCAST_IMAGE_RECEIVED})
+                    self.__communicator.send_message(send_msg)
+
+                    return True
+
+                # Set a timeout to wait for all packages to be sent
+                if not self.__package_wait_timeout_started:
+                    self.__package_wait_timeout_started = True
+                    timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
+                                  self.__image_receive_checkup, ())
+                    timer.start()
+
+    def __image_receive_checkup(self):
+        if len(self.__image_pkgs) != self.__num_of_packages:
+            send_msg = json.dumps(
+                {'code': ApplicationCode.BROADCAST_IMAGE_PACKAGES_LOSS})
+            self.__communicator.send_message(send_msg)
+            self.__waiting_for_packages = False
 
     def __split_str_n_times(self, string, n):
         list = []
