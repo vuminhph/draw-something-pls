@@ -94,19 +94,6 @@ class GuesserWindow(DisplayWindow):
                                        relx=0.01,
                                        rely=0.15)
 
-        # Picture room
-        pictName = './images/@NVH-play.png'  # Define picture pathname
-        self.__pict = PhotoImage(file=pictName)
-        self.__pictureRoom = Label(self._window,
-                                   image=self.__pict,
-                                   borderwidth=2,
-                                   relief="ridge",
-                                   bg="white")
-        self.__pictureRoom.place(relheight=0.8,
-                                 relwidth=0.45,
-                                 relx=0.25,
-                                 rely=0.1)
-
         # Chat room
         self.__chatRoom = scrolledtext.ScrolledText(self._window,
                                                     width=20,
@@ -202,3 +189,15 @@ class GuesserWindow(DisplayWindow):
     def __enable_answer(self):
         self.__answer_entry.configure(state=NORMAL)
         self.__answer_send.configure(state=NORMAL)
+
+    def __display_picture(self, filepath: str):
+        self.__pict = PhotoImage(file=filepath)
+        self.__pictureRoom = Label(self._window,
+                                   image=self.__pict,
+                                   borderwidth=2,
+                                   relief="ridge",
+                                   bg="white")
+        self.__pictureRoom.place(relheight=0.8,
+                                 relwidth=0.45,
+                                 relx=0.25,
+                                 rely=0.1)
