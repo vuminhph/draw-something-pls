@@ -53,8 +53,8 @@ class PaintWindow(DisplayWindow):
             self._window, height=1, width=7, bg='#815f96', text='Clear', command=self.__clear_all, font='Consolas')
         self.__reset_button.grid(row=0, column=3)
 
-        # self.save_button = Button(self._window, height=1, width=4, bg='#e8b443', text='Finish', command=self.quit)
-        # self.save_button.grid(row=0, column=4)
+        self.save_button = Button(self._window, height=1, width=15, bg='#f5ef7a', text='Save', command=self._on_saving_quit, font='Consolas')
+        self.save_button.grid(row=1, column=2, columnspan=2, pady=8)
 
         self.__choose_size_slide = ttk.Scale(
             self._window, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
@@ -174,6 +174,19 @@ class PaintWindow(DisplayWindow):
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Quitting will save your result. Do you want to quit?"):
             self.__save()
+
+    def _on_saving_quit(self):
+        if messagebox.askokcancel("Save", "Save your result and quit?"):
+            self.__save();
+    
+    def _on_saving_no_quit(self):
+        if messagebox.askokcancel("Save", "Save your result?"):
+            ps = self.__canvas.postscript(colormode='color')
+            image_path = asksaveasfilename(defaultextension='.jpg')
+            print(image_path)
+            if image_path:
+                img = Image.open(io.BytesIO(ps.encode('utf-8')))
+                img.save(image_path)
 
     def __close(self):
         self._window.destroy()
