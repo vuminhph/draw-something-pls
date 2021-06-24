@@ -9,6 +9,7 @@ from tkinter import *
 from tkinter import font, ttk, scrolledtext
 # from PIL import Image
 
+import os
 import time
 from _thread import *
 import tkinter
@@ -180,13 +181,6 @@ class GuesserWindow(DisplayWindow):
         # Update the scoreboard
         # self.__display_scoreboard()
 
-    def __wait_for_drawing(self):
-        # Block input from player while waiting to receive image
-        self.__disable_answer()
-        if self._game_controller.receive_image(self._GUI.get_username()):
-            pass
-        #
-
     def __disable_answer(self):
         self.__answer_entry.configure(state=DISABLED)
         self.__answer_send.configure(state=DISABLED)
@@ -195,7 +189,18 @@ class GuesserWindow(DisplayWindow):
         self.__answer_entry.configure(state=NORMAL)
         self.__answer_send.configure(state=NORMAL)
 
-    def __display_picture(self, filepath: str):
+    def __wait_for_drawing(self):
+        # Block input from player while waiting to receive image
+        self.__disable_answer()
+        if self._game_controller.receive_image(self._GUI.get_username()):
+            cur_dir = os.getcwd()
+            save_dir = './Paint/saves/receive/'
+            filename = 'image' + '_' + self._GUI.get_username() + '.png'
+            image_path = os.path.join(cur_dir, save_dir, filename)
+
+            self.__display_image(image_path)
+
+    def __display_image(self, filepath: str):
         self.__pict = PhotoImage(file=filepath)
         self.__pictureRoom = Label(self._window,
                                    image=self.__pict,

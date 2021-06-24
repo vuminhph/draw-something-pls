@@ -83,6 +83,7 @@ class GameController:
                 num_of_packages = math.ceil(image_size / (
                     SystemConst.MESSAGE_SIZE - overhead_size))
 
+            msg = {}
             msg['code'] = ApplicationCode.SEND_IMAGE_REQUEST
             msg['num_pkgs'] = num_of_packages
             print("Number of packages: ", num_of_packages)
@@ -100,6 +101,7 @@ class GameController:
                 # Split image base64 string to fit packages
                 f_splitted = self.__split_str_n_times(f, num_of_packages)
                 for p in f_splitted:
+                    print("payload packed")
                     msg['image'] = p
                     send_msg = json.dumps(msg)
                     self.__communicator.send_message(send_msg)
@@ -148,7 +150,7 @@ class GameController:
                     with open(image_path, "wb+") as image:
                         image_str = base64.b64decode(
                             ''.join(self.__image_pkgs))
-                        print(image_str)
+                        # print(image_str)
                         image.write(image_str)
 
                     send_msg = json.dumps(
