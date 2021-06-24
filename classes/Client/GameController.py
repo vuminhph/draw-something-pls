@@ -167,6 +167,8 @@ class GameController:
                     timer.start()
 
     def __image_receive_checkup(self):
+        # Check to see if all packages have been received
+
         if len(self.__image_pkgs) != self.__num_of_packages:
             send_msg = json.dumps(
                 {'code': ApplicationCode.BROADCAST_IMAGE_PACKAGES_LOSS})
@@ -174,6 +176,14 @@ class GameController:
             self.__waiting_for_packages = False
 
     def __split_str_n_times(self, string, n):
+        # splits a string up into list of n elements
+
+        # Arguments:
+        # -- string: string to be split
+        # -- n: number of times element in returned list
+        # Returns:
+        # -- list: list of n elementes splitted from the string
+
         list = []
         char_size = len(string) // n
 
@@ -193,6 +203,20 @@ class GameController:
                 list[-1] += sub_str
 
         return list
+
+    def send_answer(self, username, message):
+        # Sends the guesser's answer to the server
+        send_msg = json.dumps(
+            {'code': ApplicationCode.SEND_ANSWER, 'username': username, 'message': message})
+        self.__communicator.send_message(send_msg)
+
+    def receive_answer(self):
+        # Receive other players' answer
+        # Returns: the receive message
+
+        reply_msg = self.__communicator.receive_message()
+        if reply_msg['code'] == ApplicationCode.BROADCAST_ANSWER:
+            return reply_msg
 
     def logout(self):
         send_msg = json.dumps({'code': ApplicationCode.LOGOUT})

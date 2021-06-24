@@ -17,7 +17,7 @@ class ApplicationCode():
     GAME_ASSIGN_ROLE = '310'
     CONTINUE_WAITING = '311'
 
-    # Game Logic codes
+    # Image sending codes
     SEND_IMAGE_REQUEST = '32'
     READY_TO_RECEIVE_IMAGE = '320'
     SEND_IMAGE = '321'
@@ -29,6 +29,10 @@ class ApplicationCode():
     BROADCAST_IMAGE = '331'
     BROADCAST_IMAGE_RECEIVED = '3310'
     BROADCAST_IMAGE_PACKAGES_LOSS = '3311'
+
+    # Guesser action codes
+    SEND_ANSWER = '34'
+    BROADCAST_ANSWER = '340'
 
     # Logout code
     LOGOUT = '40'

@@ -157,16 +157,16 @@ def handle_request(user: User):
                 print("All packages received")
 
                 broadcast_request_sent = True
-                for user in active_users:
-                    if active_users.index(user) != drawer_id:
+                for usr in active_users:
+                    if active_users.index(usr) != drawer_id:
                         reply_msg = json.dumps(
                             {'code': ApplicationCode.BROADCASE_IMAGE_REQUEST, 'num_pkgs': num_of_packages})
-                        send_reply_msg(user, reply_msg)
+                        send_reply_msg(usr, reply_msg)
                     else:
                         reply_msg = json.dumps({
                             'code': ApplicationCode.IMAGE_RECEIVED
                         })
-                        send_reply_msg(user, reply_msg)
+                        send_reply_msg(usr, reply_msg)
 
             # Set a timeout to wait for all packages to be sent
             if not package_wait_timeout_started:
@@ -174,7 +174,6 @@ def handle_request(user: User):
                 timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
                               image_send_checkup, (user, ))
                 timer.start()
-        #
 
         if received_msg['code'] == ApplicationCode.READY_TO_BROADCAST_IMAGE:
             broadcast_image(user)
@@ -185,8 +184,23 @@ def handle_request(user: User):
         if received_msg['code'] == ApplicationCode.BROADCAST_IMAGE_RECEIVED:
             # TODO Implement Guesser Logic
             pass
+        #
 
-            # LOGOUT
+        # BROADCAST GUESSER ANSWER
+        if received_msg['code'] == ApplicationCode.SEND_ANSWER:
+            reply_json = received_msg
+            reply_json['code'] = ApplicationCode.BROADCAST_ANSWER
+
+            reply_msg = json.dumps(reply_json)
+
+            for usr in active_users:
+                if usr.get_username() != reply_json['username']:
+                    send_reply_msg(usr, reply_msg)
+
+            print("Message broadcasted")
+        #
+
+        # LOGOUT
         if received_msg['code'] == ApplicationCode.LOGOUT:
             logout(user)
         #

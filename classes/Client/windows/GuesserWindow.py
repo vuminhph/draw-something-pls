@@ -1,8 +1,7 @@
 # import all the required modules
 from classes.Client.windows.DisplayWindow import DisplayWindow
 import classes.Client.GUI
-from classes.Users import User
-
+from classes.enums.SystemConst import SystemConst
 
 from os import stat
 from tkinter import *
@@ -44,7 +43,7 @@ class GuesserWindow(DisplayWindow):
 
         # Message title
         self.__keyword_label = StringVar()
-        self.display_keyword("The drawer is drawing...")
+        self.__display_header("Drawing in progress...")
 
         self.__msg_label = Label(self._window,
                                  textvariable=self.__keyword_label,
@@ -57,8 +56,9 @@ class GuesserWindow(DisplayWindow):
                                rely=0.01)
 
         # Timer
+        self.__clock = SystemConst.GUESSING_TIME
         self.__timer = StringVar()
-        self.__timer.set("60")
+        self.__timer.set(str(self.__clock))
 
         self.__timer_label = Label(self._window,
                                    textvariable=self.__timer,
@@ -148,18 +148,13 @@ class GuesserWindow(DisplayWindow):
         start_new_thread(self.__wait_for_drawing, ())
         self._window.mainloop()
 
-    def display_keyword(self, keyword: str):
+    def __display_header(self, keyword: str):
         self.__keyword_label.set(keyword)
 
-    def __send_answer(self, msg):
-        self.__display_answer('Hoang', msg)
+    def __send_answer(self, message):
+        self.__display_answer(self._GUI.get_username(), message)
         self.__answer_entry.delete(0, END)
-
-    def __display_answer(self, username, answer):
-        self.__chatRoom.configure(state=NORMAL)
-        self.__chatRoom.insert(END, username + ': ' + answer + '\n\n')
-        self.__chatRoom.configure(state=DISABLED)
-        self.__chatRoom.see(END)
+        self._game_controller.send_answer(self._GUI.get_username(), message)
 
     def __display_scoreboard(self, players_dict: dict):
         self.__scoreboard__table.configure(state=NORMAL)
@@ -189,16 +184,30 @@ class GuesserWindow(DisplayWindow):
         self.__answer_entry.configure(state=NORMAL)
         self.__answer_send.configure(state=NORMAL)
 
+    def __display_answer(self, username, answer):
+        self.__chatRoom.configure(state=NORMAL)
+        self.__chatRoom.insert(END, username + ': ' + answer + '\n\n')
+        self.__chatRoom.configure(state=DISABLED)
+        self.__chatRoom.see(END)
+
     def __wait_for_drawing(self):
         # Block input from player while waiting to receive image
         self.__disable_answer()
         if self._game_controller.receive_image(self._GUI.get_username()):
-            cur_dir = os.getcwd()
-            save_dir = './Paint/saves/receive/'
-            filename = 'image' + '_' + self._GUI.get_username() + '.png'
-            image_path = os.path.join(cur_dir, save_dir, filename)
+            self.__start_guessing()
 
-            self.__display_image(image_path)
+    def __start_guessing(self):
+        cur_dir = os.getcwd()
+        save_dir = './Paint/saves/receive/'
+        filename = 'image' + '_' + self._GUI.get_username() + '.png'
+        image_path = os.path.join(cur_dir, save_dir, filename)
+
+        self.__display_image(image_path)
+        self.__enable_answer()
+        self.__display_header("Take a guess")
+
+        self.__count_down()
+        start_new_thread(self.__listen_for_other_players_answ, ())
 
     def __display_image(self, filepath: str):
         self.__pict = PhotoImage(file=filepath)
@@ -211,3 +220,18 @@ class GuesserWindow(DisplayWindow):
                                  relwidth=0.45,
                                  relx=0.25,
                                  rely=0.1)
+
+    def __count_down(self):
+        timer_text = str(int(round(self.__clock, 0)))
+        self.__timer.set(timer_text)
+        self.__clock -= 1
+
+        if self.__clock > 0:
+            self._window.after(1000, self.__count_down)
+        else:
+            pass
+            # TODO: Send guessing timeout request
+
+    def __listen_for_other_players_answ(self):
+        reply_msg = self._game_controller.receive_answer()
+        self.__display_answer(reply_msg['username'], reply_msg['message'])
