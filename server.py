@@ -19,11 +19,12 @@ UsersDatabase = {}  # Database of users and passwords information
 clock = None
 
 active_users = []  # A list of currently active users
-drawer_id = -1
-drawer_appointed = False  # TODO: reset ever y round
-
 gameLogic = None
-num_of_packages = 0
+
+drawer_id = -1  # TODO: reset ever y round
+drawer_appointed = False  # TODO: reset ever y round
+keyword = ''  # TODO: reset ever y round
+num_of_packages = 0  # TODO: reset ever y round
 package_wait_timeout_started = False  # TODO: reset ever y round
 broadcast_request_sent = False  # TODO: reset ever y round
 image_pkgs = []  # TODO: reset ever y round
@@ -100,18 +101,15 @@ def handle_request(user: User):
 
                 # Create the reply message
                 code = ApplicationCode.GAME_ASSIGN_ROLE
-                players_dict = {}
-
                 # Initalize the player dictionary
-                for cur_user in active_users:
-                    players_dict[cur_user.get_username()] = '0'
-                #
+                players_dict = create_players_dict()
 
                 reply_json = {
                     'code': code,
                 }
                 if active_users.index(user) == drawer_id:
                     # The player is selected as a drawer
+                    global keyword
                     keyword = gameLogic.get_a_keyword()
 
                     reply_json['keyword'] = keyword
@@ -160,11 +158,14 @@ def handle_request(user: User):
                 for usr in active_users:
                     if active_users.index(usr) != drawer_id:
                         reply_msg = json.dumps(
-                            {'code': ApplicationCode.BROADCASE_IMAGE_REQUEST, 'num_pkgs': num_of_packages})
+                            {'code': ApplicationCode.BROADCASE_IMAGE_REQUEST,
+                             'num_pkgs': num_of_packages})
                         send_reply_msg(usr, reply_msg)
                     else:
                         reply_msg = json.dumps({
-                            'code': ApplicationCode.IMAGE_RECEIVED
+                            'code': ApplicationCode.IMAGE_RECEIVED,
+                            'role': Role.Guesser,
+                            'players_dict': create_players_dict()
                         })
                         send_reply_msg(usr, reply_msg)
 
@@ -198,34 +199,20 @@ def handle_request(user: User):
                     send_reply_msg(usr, reply_msg)
 
             print("Message broadcasted")
+
+            # Check if answer contains the keyword
+            answer = reply_json['message']
+            if check_answer(answer):
+                reply_msg = json.dumps({'code': ApplicationCode.RIGHT_GUESS_FOUND,
+                                        'username': user.get_username()})
+                for usr in active_users:
+                    send_reply_msg(usr, reply_msg)
         #
 
         # LOGOUT
         if received_msg['code'] == ApplicationCode.LOGOUT:
             logout(user)
         #
-
-
-def broadcast_image(user):
-    global image_pkgs
-    for package in image_pkgs:
-        reply_msg = json.dumps({
-            'code': ApplicationCode.BROADCAST_IMAGE,
-            'image': package
-        })
-        send_reply_msg(user, reply_msg)
-
-
-def image_send_checkup(user):
-    # Check if all image packages have been received, send a failure message if not
-
-    global image_pkgs
-    global num_of_packages
-
-    if len(image_pkgs) != num_of_packages:
-        reply_msg = json.dumps(
-            {'code': ApplicationCode.IMAGE_PACKAGES_LOSS})
-        send_reply_msg(user, reply_msg)
 
 
 def login_authenticate(user: User, username: str, password: str):
@@ -248,6 +235,42 @@ def login_authenticate(user: User, username: str, password: str):
     user.set_username(username)
     active_users.append(user)
     return ApplicationCode.LOGIN_SUCCESS
+
+
+def create_players_dict():
+    players_dict = {}
+    for user in active_users:
+        players_dict[user.get_username()] = str(user.get_score())
+    return players_dict
+
+
+def image_send_checkup(user):
+    # Check if all image packages have been received, send a failure message if not
+
+    global image_pkgs
+    global num_of_packages
+
+    if len(image_pkgs) != num_of_packages:
+        reply_msg = json.dumps(
+            {'code': ApplicationCode.IMAGE_PACKAGES_LOSS})
+        send_reply_msg(user, reply_msg)
+
+
+def broadcast_image(user):
+    global image_pkgs
+    for package in image_pkgs:
+        reply_msg = json.dumps({
+            'code': ApplicationCode.BROADCAST_IMAGE,
+            'image': package
+        })
+        send_reply_msg(user, reply_msg)
+
+
+def check_answer(answer):
+    global keyword
+    if keyword in answer:
+        print("Right answer found!")
+        return True
 
 
 def logout(user: User):

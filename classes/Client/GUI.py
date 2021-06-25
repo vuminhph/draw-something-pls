@@ -58,7 +58,13 @@ class GUI:
             self.__display_guesser_window(self.__username, players)
 
     def __display_guesser_window(self, username, players):
-        GuesserWindow(self, username, players)
+        window = GuesserWindow(self, username, players)
+        window.start_mainloop()
+
+    def display_guesser_window_from_drawer(self, players):
+        window = GuesserWindow(self, self.__username, players)
+        window.from_drawer_init()
+        window.start_mainloop()
 
     def __display_drawer_window(self, keyword):
         PaintWindow(self, keyword)

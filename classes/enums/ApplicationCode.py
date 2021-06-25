@@ -33,6 +33,7 @@ class ApplicationCode():
     # Guesser action codes
     SEND_ANSWER = '34'
     BROADCAST_ANSWER = '340'
+    RIGHT_GUESS_FOUND = '341'
 
     # Logout code
     LOGOUT = '40'

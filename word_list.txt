@@ -66,7 +66,6 @@ coffee cup
 compass
 computer
 cookie
-cooler
 couch
 cow
 crab
@@ -160,7 +159,6 @@ light bulb
 lighter
 lighthouse
 lightning
-line
 lion
 lipstick
 lobster

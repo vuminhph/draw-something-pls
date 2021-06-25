@@ -113,11 +113,13 @@ class GameController:
             # listen for receive status
             reply_msg = self.__communicator.receive_message()
             if reply_msg['code'] == ApplicationCode.IMAGE_RECEIVED:
-                return True
+                return reply_msg['players_dict']
             elif reply_msg['code'] == ApplicationCode.IMAGE_PACKAGES_LOSS:
                 send_image_packages()
+            else:
+                return False
 
-    def receive_image(self, username):
+    def guesser_listener(self, username):
         # Receive the broadcast request and save number of packages
         # Returns: True when image has been received successfully
 
@@ -128,43 +130,50 @@ class GameController:
                 {'code': ApplicationCode.READY_TO_BROADCAST_IMAGE})
             self.__communicator.send_message(send_msg)
 
-        # Receive the broadcasted image packages
-        for i in range(self.__num_of_packages):
-            if not self.__waiting_for_packages:
-                break
+            # Receive the broadcasted image packages
+            for i in range(self.__num_of_packages):
+                if not self.__waiting_for_packages:
+                    break
 
-            reply_msg = self.__communicator.receive_message()
-            if reply_msg['code'] == ApplicationCode.BROADCAST_IMAGE:
-                self.__image_pkgs.append(reply_msg['image'])
+                reply_msg = self.__communicator.receive_message()
+                if reply_msg['code'] == ApplicationCode.BROADCAST_IMAGE:
+                    self.__image_pkgs.append(reply_msg['image'])
 
-                num_pkgs_received = len(self.__image_pkgs)
-                print("number of packages received: ", num_pkgs_received)
+                    num_pkgs_received = len(self.__image_pkgs)
+                    print("number of packages received: ", num_pkgs_received)
 
-                if num_pkgs_received == self.__num_of_packages:
-                    print("All packages received")
-                    cur_dir = os.getcwd()
-                    save_dir = './Paint/saves/receive/'
-                    filename = 'image' + '_' + username + '.png'
-                    image_path = os.path.join(cur_dir, save_dir, filename)
+                    if num_pkgs_received == self.__num_of_packages:
+                        print("All packages received")
+                        cur_dir = os.getcwd()
+                        save_dir = './Paint/saves/receive/'
+                        filename = 'image' + '_' + username + '.png'
+                        image_path = os.path.join(cur_dir, save_dir, filename)
 
-                    with open(image_path, "wb+") as image:
-                        image_str = base64.b64decode(
-                            ''.join(self.__image_pkgs))
-                        # print(image_str)
-                        image.write(image_str)
+                        with open(image_path, "wb+") as image:
+                            image_str = base64.b64decode(
+                                ''.join(self.__image_pkgs))
+                            # print(image_str)
+                            image.write(image_str)
 
-                    send_msg = json.dumps(
-                        {'code': ApplicationCode.BROADCAST_IMAGE_RECEIVED})
-                    self.__communicator.send_message(send_msg)
+                        send_msg = json.dumps(
+                            {'code': ApplicationCode.BROADCAST_IMAGE_RECEIVED})
+                        self.__communicator.send_message(send_msg)
 
-                    return True
+                        return (ApplicationCode.BROADCAST_IMAGE_RECEIVED, '')
 
-                # Set a timeout to wait for all packages to be sent
-                if not self.__package_wait_timeout_started:
-                    self.__package_wait_timeout_started = True
-                    timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
-                                  self.__image_receive_checkup, ())
-                    timer.start()
+                    # Set a timeout to wait for all packages to be sent
+                    if not self.__package_wait_timeout_started:
+                        self.__package_wait_timeout_started = True
+                        timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
+                                      self.__image_receive_checkup, ())
+                        timer.start()
+
+        elif reply_msg['code'] == ApplicationCode.BROADCAST_ANSWER:
+            return (ApplicationCode.BROADCAST_ANSWER, reply_msg)
+        elif reply_msg['code'] == ApplicationCode.RIGHT_GUESS_FOUND:
+            return (ApplicationCode.RIGHT_GUESS_FOUND, reply_msg['username'])
+        else:
+            return False
 
     def __image_receive_checkup(self):
         # Check to see if all packages have been received
@@ -204,19 +213,11 @@ class GameController:
 
         return list
 
-    def send_answer(self, username, message):
+    def send_message(self, username, message):
         # Sends the guesser's answer to the server
         send_msg = json.dumps(
             {'code': ApplicationCode.SEND_ANSWER, 'username': username, 'message': message})
         self.__communicator.send_message(send_msg)
-
-    def receive_answer(self):
-        # Receive other players' answer
-        # Returns: the receive message
-
-        reply_msg = self.__communicator.receive_message()
-        if reply_msg['code'] == ApplicationCode.BROADCAST_ANSWER:
-            return reply_msg
 
     def logout(self):
         send_msg = json.dumps({'code': ApplicationCode.LOGOUT})

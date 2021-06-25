@@ -2,6 +2,7 @@
 from classes.Client.windows.DisplayWindow import DisplayWindow
 import classes.Client.GUI
 from classes.enums.SystemConst import SystemConst
+from classes.enums.ApplicationCode import ApplicationCode
 
 from os import stat
 from tkinter import *
@@ -134,7 +135,7 @@ class GuesserWindow(DisplayWindow):
                                     font="Consolas 12 bold",
                                     width=20,
                                     bg="#ABB2B9",
-                                    command=lambda: self.__send_answer(self.__answer_entry.get()))
+                                    command=lambda: self.__send_message(self.__answer_entry.get()))
         self.__answer_send.place(relheight=0.06,
                                  relwidth=0.07,
                                  relx=0.71,
@@ -142,19 +143,22 @@ class GuesserWindow(DisplayWindow):
 
         self.__display_scoreboard(player_dict)
         # Press Enter to send answer
-        self._window.bind('<Return>', lambda e: self.__send_answer(
+        self._window.bind('<Return>', lambda e: self.__send_message(
             self.__answer_entry.get()))
 
-        start_new_thread(self.__wait_for_drawing, ())
+        start_new_thread(self.__guesser_listen, ())
+        # self._window.mainloop()
+
+    def start_mainloop(self):
         self._window.mainloop()
 
     def __display_header(self, keyword: str):
         self.__keyword_label.set(keyword)
 
-    def __send_answer(self, message):
-        self.__display_answer(self._GUI.get_username(), message)
+    def __send_message(self, message):
+        self.__display_user_message(self._GUI.get_username(), message)
         self.__answer_entry.delete(0, END)
-        self._game_controller.send_answer(self._GUI.get_username(), message)
+        self._game_controller.send_message(self._GUI.get_username(), message)
 
     def __display_scoreboard(self, players_dict: dict):
         self.__scoreboard__table.configure(state=NORMAL)
@@ -184,17 +188,44 @@ class GuesserWindow(DisplayWindow):
         self.__answer_entry.configure(state=NORMAL)
         self.__answer_send.configure(state=NORMAL)
 
-    def __display_answer(self, username, answer):
+    def __display_user_message(self, username, message):
         self.__chatRoom.configure(state=NORMAL)
-        self.__chatRoom.insert(END, username + ': ' + answer + '\n\n')
+        self.__chatRoom.insert(END, username + ': ' + message + '\n\n')
         self.__chatRoom.configure(state=DISABLED)
         self.__chatRoom.see(END)
 
-    def __wait_for_drawing(self):
+    def __display_game_message(self, message):
+        print("game message")
+        self.__chatRoom.configure(state=NORMAL)
+        self.__chatRoom.insert(END, message + '\n\n', "game_message")
+        self.__chatRoom.tag_configure(
+            "game_message", font=("Consolas", "14", "italic"))
+        self.__chatRoom.tag_configure("game_message", foreground="yellow")
+        self.__chatRoom.configure(state=DISABLED)
+        self.__chatRoom.see(END)
+
+    def __guesser_listen(self):
         # Block input from player while waiting to receive image
         self.__disable_answer()
-        if self._game_controller.receive_image(self._GUI.get_username()):
-            self.__start_guessing()
+        while True:
+            request_reply = self._game_controller.guesser_listener(
+                self._GUI.get_username())
+
+            reply_code = request_reply[0]
+            print(reply_code)
+
+            if reply_code == ApplicationCode.BROADCAST_IMAGE_RECEIVED:
+                print("Enable guessing")
+                self.__start_guessing()
+            elif reply_code == ApplicationCode.BROADCAST_ANSWER:
+                reply_msg = request_reply[1]
+                self.__display_user_message(
+                    reply_msg['username'], reply_msg['message'])
+            elif reply_code == ApplicationCode.RIGHT_GUESS_FOUND:
+                right_guesser = request_reply[1]
+                self.__display_game_message(
+                    right_guesser + " made the right guess!")
+                # TODO: END round
 
     def __start_guessing(self):
         cur_dir = os.getcwd()
@@ -207,7 +238,22 @@ class GuesserWindow(DisplayWindow):
         self.__display_header("Take a guess")
 
         self.__count_down()
-        start_new_thread(self.__listen_for_other_players_answ, ())
+
+    def from_drawer_init(self):
+        print("init")
+        self._window.after(100, self.__display_image_from_drawer)
+
+    def __display_image_from_drawer(self):
+        print("display image")
+
+        cur_dir = os.getcwd()
+        save_dir = './Paint/saves/send/'
+        filename = 'image' + '_' + self._GUI.get_username() + '.png'
+        image_path = os.path.join(cur_dir, save_dir, filename)
+        self.__display_image(image_path)
+        self.__display_header("Other players are guessing")
+
+        self.__count_down()
 
     def __display_image(self, filepath: str):
         self.__pict = PhotoImage(file=filepath)
@@ -228,10 +274,20 @@ class GuesserWindow(DisplayWindow):
 
         if self.__clock > 0:
             self._window.after(1000, self.__count_down)
+            if self.__clock <= 5:
+                self.__timer_label.config(fg="red")
         else:
             pass
             # TODO: Send guessing timeout request
 
     def __listen_for_other_players_answ(self):
         reply_msg = self._game_controller.receive_answer()
-        self.__display_answer(reply_msg['username'], reply_msg['message'])
+        if reply_msg:
+            self.__display_user_message(
+                reply_msg['username'], reply_msg['message'])
+
+    def __listen_for_right_guess(self):
+        right_guesser = self._game_controller.listen_for_right_guess()
+        if right_guesser:
+            self.__display_game_message(
+                right_guesser + " made the right guess!")

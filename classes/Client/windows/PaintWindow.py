@@ -8,6 +8,7 @@ from tkinter import messagebox
 import tkinter.ttk as ttk
 import io
 import os
+import time
 from tkinter.tix import WINDOW
 from PIL import Image
 
@@ -168,13 +169,12 @@ class PaintWindow(DisplayWindow):
         if image_path:
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(image_path)
-        if self._game_controller.send_image(self._GUI.get_username()):
-            self.__close()
+
+        players = self._game_controller.send_image(self._GUI.get_username())
+        if players:
+            self._window.destroy()
+            self._GUI.display_guesser_window_from_drawer(players)
 
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Quitting will save your result. Do you want to quit?"):
             self.__save()
-
-    def __close(self):
-        self._window.destroy()
-        self._GUI.get_game_window().destroy()  # TODO: Returns to Guesser window
