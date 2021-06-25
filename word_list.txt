@@ -35,7 +35,6 @@ broom
 bucket
 bulldozer
 bus
-bush
 butterfly
 cactus
 cake
@@ -116,7 +115,6 @@ frying pan
 garden
 garden hose
 giraffe
-goatee
 golf club
 grapes
 grass
@@ -191,7 +189,6 @@ onion
 oven
 owl
 paintbrush
-paint can
 palm tree
 panda
 pants
@@ -216,7 +213,6 @@ popsicle
 postcard
 potato
 power outlet
-purse
 rabbit
 raccoon
 radio

@@ -20,7 +20,7 @@ import tkinter
 
 class GuesserWindow(DisplayWindow):
     # constructor method
-    def __init__(self, GUI, username: str, player_dict: dict):
+    def __init__(self, GUI, username: str, players_dict: dict, drawer_name: str):
         super().__init__(GUI)
 
         # Game window
@@ -34,7 +34,7 @@ class GuesserWindow(DisplayWindow):
         # Player name
         self.__playerName = Label(self._window,
                                   font=("Consolas", 20),
-                                  text='Player: ' + username,
+                                  text=username,
                                   bg="white",
                                   relief="ridge")
         self.__playerName.place(relheight=0.08,
@@ -44,7 +44,8 @@ class GuesserWindow(DisplayWindow):
 
         # Message title
         self.__keyword_label = StringVar()
-        self.__display_header("Drawing in progress...")
+
+        self.__display_header(drawer_name + " is drawing...")
 
         self.__msg_label = Label(self._window,
                                  textvariable=self.__keyword_label,
@@ -141,7 +142,7 @@ class GuesserWindow(DisplayWindow):
                                  relx=0.71,
                                  rely=0.92)
 
-        self.__display_scoreboard(player_dict)
+        self.__display_scoreboard(players_dict, drawer_name)
         # Press Enter to send answer
         self._window.bind('<Return>', lambda e: self.__send_message(
             self.__answer_entry.get()))
@@ -160,14 +161,19 @@ class GuesserWindow(DisplayWindow):
         self.__answer_entry.delete(0, END)
         self._game_controller.send_message(self._GUI.get_username(), message)
 
-    def __display_scoreboard(self, players_dict: dict):
+    def __display_scoreboard(self, players_dict: dict, drawer_name: str):
         self.__scoreboard__table.configure(state=NORMAL)
         self.__scoreboard__table.delete(0.0, END)
 
         # Insert from players dictionary
-        for user in players_dict.keys():
-            score = players_dict[user]
-            self.__scoreboard__table.insert(END, user + ': ' + score + '\n\n')
+        for username in players_dict.keys():
+            score = players_dict[username]
+            if username == drawer_name:
+                self.__scoreboard__table.insert(
+                    END, username + '(Drawer): ' + score + '\n\n')
+            else:
+                self.__scoreboard__table.insert(
+                    END, username + ': ' + score + '\n\n')
 
         self.__scoreboard__table.configure(state=DISABLED)
 
@@ -272,22 +278,11 @@ class GuesserWindow(DisplayWindow):
         self.__timer.set(timer_text)
         self.__clock -= 1
 
-        if self.__clock > 0:
+        if self.__clock >= 0:
             self._window.after(1000, self.__count_down)
+
             if self.__clock <= 5:
                 self.__timer_label.config(fg="red")
         else:
             pass
             # TODO: Send guessing timeout request
-
-    def __listen_for_other_players_answ(self):
-        reply_msg = self._game_controller.receive_answer()
-        if reply_msg:
-            self.__display_user_message(
-                reply_msg['username'], reply_msg['message'])
-
-    def __listen_for_right_guess(self):
-        right_guesser = self._game_controller.listen_for_right_guess()
-        if right_guesser:
-            self.__display_game_message(
-                right_guesser + " made the right guess!")

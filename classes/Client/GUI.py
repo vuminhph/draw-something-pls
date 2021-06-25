@@ -55,14 +55,16 @@ class GUI:
         elif reply_msg['role'] == Role.Guesser:
             print('You have been assigned the role of Guesser')
             players = reply_msg['players_dict']
-            self.__display_guesser_window(self.__username, players)
+            drawer_name = reply_msg['drawer_name']
+            self.__display_guesser_window(
+                self.__username, players, drawer_name)
 
-    def __display_guesser_window(self, username, players):
-        window = GuesserWindow(self, username, players)
+    def __display_guesser_window(self, username, players, drawer_name):
+        window = GuesserWindow(self, username, players, drawer_name)
         window.start_mainloop()
 
-    def display_guesser_window_from_drawer(self, players):
-        window = GuesserWindow(self, self.__username, players)
+    def display_guesser_window_from_drawer(self, players, drawer_name):
+        window = GuesserWindow(self, self.__username, players, drawer_name)
         window.from_drawer_init()
         window.start_mainloop()
 

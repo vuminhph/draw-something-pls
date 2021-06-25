@@ -119,6 +119,7 @@ def handle_request(user: User):
                     # The player is selected as a guesser
                     reply_json['role'] = Role.Guesser
                     reply_json['players_dict'] = players_dict
+                    reply_json['drawer_name'] = active_users[drawer_id].get_username()
                     reply_msg = json.dumps(reply_json)
 
                 # Stop the clock
@@ -165,7 +166,7 @@ def handle_request(user: User):
                         reply_msg = json.dumps({
                             'code': ApplicationCode.IMAGE_RECEIVED,
                             'role': Role.Guesser,
-                            'players_dict': create_players_dict()
+                            'players_dict': create_players_dict(),
                         })
                         send_reply_msg(usr, reply_msg)
 

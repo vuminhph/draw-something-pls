@@ -62,7 +62,7 @@ class GameController:
 
     def send_image(self, username):
         # Called by the drawer window, sends the result image to the server
-        # Returns True if server receive image successfully
+        # Returns players_dict if server receive image successfully
 
         cur_dir = os.getcwd()
         save_dir = './Paint/saves/send/'

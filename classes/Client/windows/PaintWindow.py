@@ -171,10 +171,13 @@ class PaintWindow(DisplayWindow):
             img.save(image_path)
 
         players = self._game_controller.send_image(self._GUI.get_username())
+        drawer_name = self._GUI.get_username()
+
         if players:
             self._window.destroy()
-            self._GUI.display_guesser_window_from_drawer(players)
+            self._GUI.display_guesser_window_from_drawer(players, drawer_name)
 
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Quitting will save your result. Do you want to quit?"):
             self.__save()
+            self._game_controller.logout()
