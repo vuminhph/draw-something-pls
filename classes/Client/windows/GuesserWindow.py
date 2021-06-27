@@ -4,23 +4,18 @@ import classes.Client.GUI
 from classes.enums.SystemConst import SystemConst
 from classes.enums.ApplicationCode import ApplicationCode
 
-from os import stat
 from tkinter import *
 from tkinter import font, ttk, scrolledtext
-# from PIL import Image
 
 import os
 import time
 from _thread import *
-import tkinter
-
-# import threading
-# GUI class for the chat
+from random import randint
 
 
 class GuesserWindow(DisplayWindow):
     # constructor method
-    def __init__(self, GUI, username: str, players_dict: dict, drawer_name: str):
+    def __init__(self, GUI, username: str, players_dict: dict, drawer_name: str, obc_keyword: str = None, is_drawer: bool = False):
         super().__init__(GUI)
 
         # Game window
@@ -44,7 +39,7 @@ class GuesserWindow(DisplayWindow):
 
         # Message title
         self.__keyword_label = StringVar()
-
+        self.__drawer_name = drawer_name
         self.__display_header(drawer_name + " is drawing...")
 
         self.__msg_label = Label(self._window,
@@ -147,19 +142,24 @@ class GuesserWindow(DisplayWindow):
         self._window.bind('<Return>', lambda e: self.__send_message(
             self.__answer_entry.get()))
 
+        self.__obc_keyword = obc_keyword
+        self.__is_drawer = is_drawer
+        self.__counting_down = True  # TODO: Reset every round
+
         start_new_thread(self.__guesser_listen, ())
         # self._window.mainloop()
 
     def start_mainloop(self):
         self._window.mainloop()
 
-    def __display_header(self, keyword: str):
-        self.__keyword_label.set(keyword)
+    def __display_header(self, header: str):
+        self.__keyword_label.set(header)
 
     def __send_message(self, message):
         self.__display_user_message(self._GUI.get_username(), message)
         self.__answer_entry.delete(0, END)
-        self._game_controller.send_message(self._GUI.get_username(), message)
+        self._game_controller.send_message(
+            self._GUI.get_username(), message, self.__clock)
 
     def __display_scoreboard(self, players_dict: dict, drawer_name: str):
         self.__scoreboard__table.configure(state=NORMAL)
@@ -170,7 +170,7 @@ class GuesserWindow(DisplayWindow):
             score = players_dict[username]
             if username == drawer_name:
                 self.__scoreboard__table.insert(
-                    END, username + '(Drawer): ' + score + '\n\n')
+                    END, username + ' (drawer): ' + score + '\n\n')
             else:
                 self.__scoreboard__table.insert(
                     END, username + ': ' + score + '\n\n')
@@ -186,11 +186,11 @@ class GuesserWindow(DisplayWindow):
         # Update the scoreboard
         # self.__display_scoreboard()
 
-    def __disable_answer(self):
+    def __disable_answering(self):
         self.__answer_entry.configure(state=DISABLED)
         self.__answer_send.configure(state=DISABLED)
 
-    def __enable_answer(self):
+    def __enable_answering(self):
         self.__answer_entry.configure(state=NORMAL)
         self.__answer_send.configure(state=NORMAL)
 
@@ -212,10 +212,13 @@ class GuesserWindow(DisplayWindow):
 
     def __guesser_listen(self):
         # Block input from player while waiting to receive image
-        self.__disable_answer()
+        self.__disable_answering()
         while True:
             request_reply = self._game_controller.guesser_listener(
                 self._GUI.get_username())
+
+            if not request_reply:
+                continue
 
             reply_code = request_reply[0]
             print(reply_code)
@@ -227,11 +230,28 @@ class GuesserWindow(DisplayWindow):
                 reply_msg = request_reply[1]
                 self.__display_user_message(
                     reply_msg['username'], reply_msg['message'])
+            elif reply_code == ApplicationCode.GIVE_HINT and not self.__is_drawer:
+                hinted_keyword = request_reply[1]
+                self.__display_header(hinted_keyword)
             elif reply_code == ApplicationCode.RIGHT_GUESS_FOUND:
-                right_guesser = request_reply[1]
+                reply_msg = request_reply[1]
+                keyword = reply_msg['keyword']
+                right_guesser = reply_msg['right_guesser']
+                scores_earned = reply_msg['scores_earned']
+                players_dict = reply_msg['players_dict']
+
+                self.__display_header(keyword)
+                self.__display_scoreboard(players_dict, self.__drawer_name)
                 self.__display_game_message(
                     right_guesser + " made the right guess!")
-                # TODO: END round
+                self.__display_game_message(
+                    right_guesser + " earned " + str(scores_earned['guesser']) + " points")
+                self.__display_game_message(
+                    self.__drawer_name + " earned " + str(scores_earned['drawer']) + " points")
+
+                self.__stop_countdown()
+                reply_msg = self._game_controller.listen_for_role_assignment()
+                self._window.after(5000, self.__start_new_round, reply_msg)
 
     def __start_guessing(self):
         cur_dir = os.getcwd()
@@ -240,8 +260,10 @@ class GuesserWindow(DisplayWindow):
         image_path = os.path.join(cur_dir, save_dir, filename)
 
         self.__display_image(image_path)
-        self.__enable_answer()
-        self.__display_header("Take a guess")
+        self.__enable_answering()
+
+        keyword_display = self.__obc_keyword
+        self.__display_header(keyword_display)
 
         self.__count_down()
 
@@ -278,11 +300,23 @@ class GuesserWindow(DisplayWindow):
         self.__timer.set(timer_text)
         self.__clock -= 1
 
-        if self.__clock >= 0:
+        if self.__clock >= 0 and self.__counting_down:
             self._window.after(1000, self.__count_down)
 
             if self.__clock <= 5:
                 self.__timer_label.config(fg="red")
+
+            if self.__clock == SystemConst.HINT_TIME:
+                print("Request hint")
+                self._game_controller.request_hint()
         else:
             pass
             # TODO: Send guessing timeout request
+
+    def __stop_countdown(self):
+        self.__counting_down = False
+
+    def __start_new_round(self, reply_msg):
+        print(reply_msg)
+        self._window.destroy()
+        self._GUI.display_game_window(reply_msg)

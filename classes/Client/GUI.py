@@ -46,7 +46,6 @@ class GUI:
         WaitingWindow(self)
 
     def display_game_window(self, reply_msg):
-
         if reply_msg['role'] == Role.Drawer:
             print('You have been assigned the role of Drawer')
             keyword = reply_msg['keyword']
@@ -56,15 +55,20 @@ class GUI:
             print('You have been assigned the role of Guesser')
             players = reply_msg['players_dict']
             drawer_name = reply_msg['drawer_name']
-            self.__display_guesser_window(
-                self.__username, players, drawer_name)
+            obc_keyword = reply_msg['obc_keyword']
 
-    def __display_guesser_window(self, username, players, drawer_name):
-        window = GuesserWindow(self, username, players, drawer_name)
+            self.__display_guesser_window(
+                self.__username, players, drawer_name, obc_keyword)
+        self.__game_controller.reset_round()
+
+    def __display_guesser_window(self, username, players, drawer_name, obc_keyword):
+        window = GuesserWindow(self, username, players,
+                               drawer_name, obc_keyword)
         window.start_mainloop()
 
     def display_guesser_window_from_drawer(self, players, drawer_name):
-        window = GuesserWindow(self, self.__username, players, drawer_name)
+        window = GuesserWindow(self, self.__username,
+                               players, drawer_name, is_drawer=True)
         window.from_drawer_init()
         window.start_mainloop()
 

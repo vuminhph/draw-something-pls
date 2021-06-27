@@ -34,6 +34,8 @@ class ApplicationCode():
     SEND_ANSWER = '34'
     BROADCAST_ANSWER = '340'
     RIGHT_GUESS_FOUND = '341'
+    REQUEST_HINT = '35'
+    GIVE_HINT = '350'
 
     # Logout code
     LOGOUT = '40'

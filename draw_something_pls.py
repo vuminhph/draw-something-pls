@@ -1,11 +1,9 @@
 from classes.Client.GUI import GUI
+from classes.enums.SystemConst import SystemConst
 
 
 def main():
-    HOST = '127.0.0.1'
-    PORT = 5556
-
-    game = GUI(host=HOST, port=PORT)
+    game = GUI(host=SystemConst.HOST, port=SystemConst.PORT)
 
 
 if __name__ == "__main__":

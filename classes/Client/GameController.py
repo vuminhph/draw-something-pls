@@ -7,6 +7,7 @@ import os
 import json
 import base64
 import math
+import time
 
 
 class GameController:
@@ -56,11 +57,15 @@ class GameController:
         send_msg = json.dumps({'code': ApplicationCode.GAME_START_REQUEST})
         self.__communicator.send_message(send_msg)
 
+        return self.listen_for_role_assignment()
+
+    def listen_for_role_assignment(self):
         # receive reply from server
         reply_msg = self.__communicator.receive_message()
-        return reply_msg
+        if reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE or reply_msg['code'] == ApplicationCode.CONTINUE_WAITING:
+            return reply_msg
 
-    def send_image(self, username):
+    def send_image(self, username, time_left):
         # Called by the drawer window, sends the result image to the server
         # Returns players_dict if server receive image successfully
 
@@ -86,6 +91,7 @@ class GameController:
             msg = {}
             msg['code'] = ApplicationCode.SEND_IMAGE_REQUEST
             msg['num_pkgs'] = num_of_packages
+            msg['time_left'] = time_left
             print("Number of packages: ", num_of_packages)
 
             # request the server to send image
@@ -94,30 +100,33 @@ class GameController:
 
             # receive reply from server
             reply_msg = self.__communicator.receive_message()
-
-            def send_image_packages():
-                msg = {}
-                msg['code'] = ApplicationCode.SEND_IMAGE
-                # Split image base64 string to fit packages
-                f_splitted = self.__split_str_n_times(f, num_of_packages)
-                for p in f_splitted:
-                    print("payload packed")
-                    msg['image'] = p
-                    send_msg = json.dumps(msg)
-                    self.__communicator.send_message(send_msg)
+            print(reply_msg)
+            print("ok")
 
             if reply_msg['code'] == ApplicationCode.READY_TO_RECEIVE_IMAGE:
-                send_image_packages()
+                self.__send_image_packages(f, num_of_packages)
                 print("Image sent")
 
             # listen for receive status
             reply_msg = self.__communicator.receive_message()
             if reply_msg['code'] == ApplicationCode.IMAGE_RECEIVED:
+                image.close()
                 return reply_msg['players_dict']
             elif reply_msg['code'] == ApplicationCode.IMAGE_PACKAGES_LOSS:
-                send_image_packages()
+                self.__send_image_packages(f, num_of_packages)
             else:
                 return False
+
+    def __send_image_packages(self, f, num_of_packages):
+        msg = {}
+        msg['code'] = ApplicationCode.SEND_IMAGE
+        # Split image base64 string to fit packages
+        f_splitted = self.__split_str_n_times(f, num_of_packages)
+        for p in f_splitted:
+            print("payload packed")
+            msg['image'] = p
+            send_msg = json.dumps(msg)
+            self.__communicator.send_message(send_msg)
 
     def guesser_listener(self, username):
         # Receive the broadcast request and save number of packages
@@ -171,7 +180,11 @@ class GameController:
         elif reply_msg['code'] == ApplicationCode.BROADCAST_ANSWER:
             return (ApplicationCode.BROADCAST_ANSWER, reply_msg)
         elif reply_msg['code'] == ApplicationCode.RIGHT_GUESS_FOUND:
-            return (ApplicationCode.RIGHT_GUESS_FOUND, reply_msg['username'])
+            return (ApplicationCode.RIGHT_GUESS_FOUND, reply_msg)
+        elif reply_msg['code'] == ApplicationCode.GIVE_HINT:
+            return (ApplicationCode.GIVE_HINT, reply_msg['hinted_keyword'])
+        elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
+            return (ApplicationCode.GIVE_HINT, reply_msg)
         else:
             return False
 
@@ -213,11 +226,25 @@ class GameController:
 
         return list
 
-    def send_message(self, username, message):
+    def send_message(self, username, message, time_left):
         # Sends the guesser's answer to the server
         send_msg = json.dumps(
-            {'code': ApplicationCode.SEND_ANSWER, 'username': username, 'message': message})
+            {'code': ApplicationCode.SEND_ANSWER,
+             'username': username,
+             'message': message,
+             'time_left': time_left})
         self.__communicator.send_message(send_msg)
+
+    def request_hint(self):
+        # Request server for a hint
+        send_msg = json.dumps({'code': ApplicationCode.REQUEST_HINT})
+        self.__communicator.send_message(send_msg)
+
+    def reset_round(self):
+        self.__image_pkgs = []
+        self.__num_of_packages = 0
+        self.__package_wait_timeout_started = False
+        self.__waiting_for_packages = True
 
     def logout(self):
         send_msg = json.dumps({'code': ApplicationCode.LOGOUT})

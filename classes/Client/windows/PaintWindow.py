@@ -1,5 +1,6 @@
 import classes.Client.GUI
 from classes.Client.windows.DisplayWindow import DisplayWindow
+from classes.enums.SystemConst import SystemConst
 
 from tkinter import *
 from tkinter.colorchooser import askcolor
@@ -14,16 +15,16 @@ from PIL import Image
 
 
 class PaintWindow(DisplayWindow):
-    DEFAULT_PEN_SIZE = 5.0
-    DEFAULT_COLOR = 'black'
-    DEFAULT_WIDTH = 576
-    DEFAULT_HEIGHT = 576
-    CANVAS_BG = 'white'
-    WINDOW_BG = '#17202A'
-    LINE_WIDTH_OFFSET = 3
-    ERASER_WIDTH_OFFSET = 13
-    __TIME_LIMIT = 30
-    __WARM_UP___TIME_LIMIT = 5
+    __DEFAULT_PEN_SIZE = 5.0
+    __DEFAULT_COLOR = 'black'
+    __DEFAULT_WIDTH = 576
+    __DEFAULT_HEIGHT = 576
+    __CANVAS_BG = 'white'
+    __WINDOW_BG = '#17202A'
+    __LINE_WIDTH_OFFSET = 3
+    __ERASER_WIDTH_OFFSET = 13
+    __clock = SystemConst.DRAWING_TIME
+    __warm_up_clock = SystemConst.DRAWING_WARM_UP_TIME
 
     # Called when an instance of the class is created
     def __init__(self, GUI, keyword):
@@ -31,12 +32,12 @@ class PaintWindow(DisplayWindow):
 
         self._window.geometry("576x760")
         self._window.title("Paint")
-        self._window.configure(bg=self.WINDOW_BG)
+        self._window.configure(bg=self.__WINDOW_BG)
         self._window.resizable(False, False)
 
         self.__style = ttk.Style()
         self.__style.configure("myStyle.Horizontal.TScale",
-                               background=self.WINDOW_BG)
+                               background=self.__WINDOW_BG)
 
         self.__pen_button = Button(
             self._window, height=1, width=7, bg='#eba134', text='Pen', command=self.__use_pen, font='Consolas')
@@ -54,9 +55,9 @@ class PaintWindow(DisplayWindow):
             self._window, height=1, width=7, bg='#815f96', text='Clear', command=self.__clear_all, font='Consolas')
         self.__reset_button.grid(row=0, column=3)
 
-        self.save_button = Button(self._window, height=1, width=15, bg='#f5ef7a',
+        self.save_button = Button(self._window, height=1, width=7, bg='#f5ef7a',
                                   text='Save', command=self._on_saving_quit, font='Consolas')
-        self.save_button.grid(row=1, column=2, columnspan=2, pady=8)
+        self.save_button.grid(row=1, column=3, columnspan=1, pady=8)
 
         self.__choose_size_slide = ttk.Scale(
             self._window, from_=1, to=10, orient=HORIZONTAL, style="myStyle.Horizontal.TScale")
@@ -68,28 +69,28 @@ class PaintWindow(DisplayWindow):
 
         self.__timer = StringVar()
         self.__timerLabel = Label(
-            self._window, textvariable=self.__timer, bg=self.WINDOW_BG, fg=self.CANVAS_BG, font=('Consolas bold', 20))
+            self._window, textvariable=self.__timer, bg=self.__WINDOW_BG, fg=self.__CANVAS_BG, font=('Consolas bold', 20))
         self.__timerLabel.grid(row=2, column=0, columnspan=4, pady=5)
         self.__warm_up_countdown()
 
-        self.__canvas = Canvas(self._window, bg=self.CANVAS_BG,
-                               width=self.DEFAULT_WIDTH, height=self.DEFAULT_HEIGHT)
+        self.__canvas = Canvas(self._window, bg=self.__CANVAS_BG,
+                               width=self.__DEFAULT_WIDTH, height=self.__DEFAULT_HEIGHT)
         self.__canvas.grid(row=3, columnspan=4)
 
         self.kw = StringVar(value=keyword)
         self.__keyword = Label(self._window, textvariable=self.kw,
-                               bg=self.WINDOW_BG, fg=self.CANVAS_BG, font='Consolas 20 bold')
+                               bg=self.__WINDOW_BG, fg=self.__CANVAS_BG, font='Consolas 20 bold')
         self.__keyword.grid(row=4, columnspan=4)
 
         self.__setup()
         self._window.mainloop()
 
     def __warm_up_countdown(self):
-        self.__WARM_UP___TIME_LIMIT -= 1
+        self.__warm_up_clock -= 1
 
-        if self.__WARM_UP___TIME_LIMIT > 0:
-            self.__timer.set(str(self.__WARM_UP___TIME_LIMIT))
-            if self.__WARM_UP___TIME_LIMIT <= 5:
+        if self.__warm_up_clock > 0:
+            self.__timer.set(str(self.__warm_up_clock))
+            if self.__warm_up_clock <= 5:
                 self.__timerLabel.config(fg="red")
             self._window.after(1000, self.__warm_up_countdown)
         else:
@@ -97,10 +98,10 @@ class PaintWindow(DisplayWindow):
             self.__countdown()
 
     def __countdown(self):
-        if self.__TIME_LIMIT > 0:
-            self.__timer.set(str(self.__TIME_LIMIT))
-            self.__TIME_LIMIT -= 1
-            if self.__TIME_LIMIT <= 5:
+        if self.__clock > 0:
+            self.__timer.set(str(self.__clock))
+            self.__clock -= 1
+            if self.__clock <= 5:
                 self.__timerLabel.config(fg="red")
             self._window.after(1000, self.__countdown)
         else:
@@ -111,7 +112,7 @@ class PaintWindow(DisplayWindow):
         self.__old_y = None
         self.__line_width = self.__choose_size_slide.get()
         self.__eraser_width = self.__choose_eraser_size_button.get()
-        self.__color = self.DEFAULT_COLOR
+        self.__color = self.__DEFAULT_COLOR
         self.__eraser_on = False
         self.__active_button = self.__pen_button
         self.__canvas.bind('<B1-Motion>', self.__paint)
@@ -146,11 +147,11 @@ class PaintWindow(DisplayWindow):
         if self.__old_x and self.__old_y:
             if self.__eraser_on:
                 self.__canvas.create_line(self.__old_x, self.__old_y, event.x, event.y,
-                                          width=self.__line_width+self.ERASER_WIDTH_OFFSET, fill=paint_color,
+                                          width=self.__line_width+self.__ERASER_WIDTH_OFFSET, fill=paint_color,
                                           capstyle=ROUND, smooth=TRUE, splinesteps=36)
             else:
                 self.__canvas.create_line(self.__old_x, self.__old_y, event.x, event.y,
-                                          width=self.__line_width+self.LINE_WIDTH_OFFSET, fill=paint_color,
+                                          width=self.__line_width+self.__LINE_WIDTH_OFFSET, fill=paint_color,
                                           capstyle=ROUND, smooth=TRUE, splinesteps=36)
         self.__old_x = event.x
         self.__old_y = event.y
@@ -171,7 +172,8 @@ class PaintWindow(DisplayWindow):
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(image_path)
 
-        players = self._game_controller.send_image(self._GUI.get_username())
+        players = self._game_controller.send_image(
+            self._GUI.get_username(), self.__clock)
         drawer_name = self._GUI.get_username()
 
         if players:
@@ -181,9 +183,7 @@ class PaintWindow(DisplayWindow):
     def _on_closing(self):
         if messagebox.askokcancel("Quit", "Quitting will save your result. Do you want to quit?"):
             self.__save()
-            self._game_controller.logout()
 
     def _on_saving_quit(self):
         if messagebox.askokcancel("Save", "Save your result and quit?"):
             self.__save()
-            self._game_controller.logout()

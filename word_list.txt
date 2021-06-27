@@ -52,16 +52,13 @@ carrot
 castle
 cat
 ceiling fan
-cello
-cell phone
+cellphone
 chair
 chandelier
 church
 circle
-clarinet
 clock
 cloud
-coffee cup
 compass
 computer
 cookie
@@ -71,7 +68,6 @@ crab
 crayon
 crocodile
 crown
-cruise ship
 cup
 diamond
 dishwasher
@@ -105,7 +101,6 @@ fish
 flamingo
 flashlight
 flip flops
-floor lamp
 flower
 flying saucer
 foot
@@ -113,7 +108,6 @@ fork
 frog
 frying pan
 garden
-garden hose
 giraffe
 golf club
 grapes
@@ -135,7 +129,6 @@ horse
 hospital
 hot air balloon
 hot dog
-hot tub
 hourglass
 house
 house plant
@@ -206,7 +199,6 @@ pig
 pillow
 pineapple
 pizza
-police car
 pond
 pool
 popsicle
@@ -251,7 +243,6 @@ sock
 spider
 spoon
 spreadsheet
-square
 squirrel
 stairs
 star
@@ -270,13 +261,12 @@ swing set
 sword
 syringe
 table
-teddy-bear
+teddy bear
 telephone
 television
 tent
-The Eiffel Tower
-The Great Wall of China
-The Mona Lisa
+Eiffel Tower
+Mona Lisa
 tiger
 toe
 toilet

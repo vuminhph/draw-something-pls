@@ -1,11 +1,22 @@
 class SystemConst():
+    # Server config
+    HOST = '127.0.0.1'
+    PORT = 5555
     MESSAGE_SIZE = 2048
 
     # Durations
+    TIME_BETWEEN_REQUEST = 0.25
     WAITING_FOR_PLAYERS = 15
     WAIT_IMAGE_TIMEOUT = 5
-    GUESSING_TIME = 60
+    DRAWING_TIME = 30
+    DRAWING_WARM_UP_TIME = 5
+    GUESSING_TIME = 30
+    HINT_TIME = 15
 
     # Game settings
     MAX_PLAYERS = 5
     MIN_PLAYERS = 3
+    HINT_PERCENTAGE = 0.2
+
+    GUESSER_SCORE_MULTI = 100
+    DRAWER_SCORE_MULTI = 200

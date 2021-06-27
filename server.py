@@ -1,4 +1,4 @@
-from classes.Users import ServerUser as User
+from classes.Users import User
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.enums.SystemConst import SystemConst
@@ -9,7 +9,9 @@ from classes.Server.GameLogic import GameLogic
 import socket
 import csv
 import json
-import random
+import math
+from random import randint
+import time
 
 from threading import Timer
 from _thread import start_new_thread
@@ -21,13 +23,10 @@ clock = None
 active_users = []  # A list of currently active users
 gameLogic = None
 
-drawer_id = -1  # TODO: reset ever y round
-drawer_appointed = False  # TODO: reset ever y round
-keyword = ''  # TODO: reset ever y round
-num_of_packages = 0  # TODO: reset ever y round
-package_wait_timeout_started = False  # TODO: reset ever y round
-broadcast_request_sent = False  # TODO: reset ever y round
-image_pkgs = []  # TODO: reset ever y round
+# num_of_packages = 0  # TODO: reset every round
+# package_wait_timeout_started = False  # TODO: reset every round
+# broadcast_request_sent = False  # TODO: reset every round
+# image_pkgs = []  # TODO: reset every round
 
 
 def handle_request(user: User):
@@ -89,39 +88,41 @@ def handle_request(user: User):
             num_of_users = len(active_users)
 
             if num_of_users >= SystemConst.MIN_PLAYERS and num_of_users <= SystemConst.MAX_PLAYERS:
-                global drawer_id
-                global drawer_appointed
+                # Initalize the player dictionary
+                usernames = [user.get_username() for user in active_users]
+                players_dict = gameLogic.create_players_dict(usernames)
+
                 # Role assignment and game logic instatiation
-                if not drawer_appointed:
+                if not gameLogic.if_drawer_appointed():
+                    drawer_id = gameLogic.appoint_drawer()
                     print(f"Drawer's index: {drawer_id}")
-                    global gameLogic
-                    drawer_id = random.randint(0, len(active_users) - 1)
-                    gameLogic = GameLogic()
-                    drawer_appointed = True
+                    gameLogic.set_drawer_name(
+                        active_users[drawer_id].get_username())
 
                 # Create the reply message
-                code = ApplicationCode.GAME_ASSIGN_ROLE
-                # Initalize the player dictionary
-                players_dict = create_players_dict()
+                reply_json = {}
+                reply_json['code'] = ApplicationCode.GAME_ASSIGN_ROLE
 
-                reply_json = {
-                    'code': code,
-                }
-                if active_users.index(user) == drawer_id:
+                if active_users.index(user) == gameLogic.get_drawer_id():
                     # The player is selected as a drawer
-                    global keyword
-                    keyword = gameLogic.get_a_keyword()
-
-                    reply_json['keyword'] = keyword
                     reply_json['role'] = Role.Drawer
-                    reply_msg = json.dumps(reply_json)
+                    keyword = gameLogic.generate_keyword()
+                    reply_json['keyword'] = keyword
                 else:
                     # The player is selected as a guesser
+
+                    # make sure a keyword is selected
+                    while True:
+                        if gameLogic.get_keyword() != '':
+                            break
+
                     reply_json['role'] = Role.Guesser
                     reply_json['players_dict'] = players_dict
-                    reply_json['drawer_name'] = active_users[drawer_id].get_username()
-                    reply_msg = json.dumps(reply_json)
+                    reply_json['drawer_name'] = active_users[gameLogic.get_drawer_id(
+                    )].get_username()
+                    reply_json['obc_keyword'] = gameLogic.generate_obscurd_keyword()
 
+                reply_msg = json.dumps(reply_json)
                 # Stop the clock
                 clock.stop_clock()
                 ##
@@ -135,8 +136,8 @@ def handle_request(user: User):
 
         # RECEIVE IMAGE SEND REQUEST
         if received_msg['code'] == ApplicationCode.SEND_IMAGE_REQUEST:
-            global num_of_packages
-            num_of_packages = received_msg['num_pkgs']
+            gameLogic.set_total_num_of_pkgs(received_msg['num_pkgs'])
+            gameLogic.set_drawer_time_left(received_msg['time_left'])
             reply_msg = json.dumps(
                 {'code': ApplicationCode.READY_TO_RECEIVE_IMAGE})
             send_reply_msg(user, reply_msg)
@@ -144,53 +145,48 @@ def handle_request(user: User):
 
         # RECEIVE IMAGE AND SENT BROADCAST REQUEST TO GUESSERS
         if received_msg['code'] == ApplicationCode.SEND_IMAGE:
-            global image_pkgs
-            global broadcast_request_sent
-            global package_wait_timeout_started
-            image_pkgs.append(received_msg['image'])
+            # image_pkgs.append(received_msg['image'])
+            gameLogic.append_image_pkg(received_msg['image'])
 
-            num_pkgs_received = len(image_pkgs)
-            print("number of packages received: ", num_pkgs_received)
-
-            if num_pkgs_received == num_of_packages and not broadcast_request_sent:
+            if gameLogic.if_all_image_pkgs_received() and not gameLogic.if_broadcast_request_sent():
                 print("All packages received")
+                total_num_pkgs = gameLogic.get_total_num_of_pkgs()
 
-                broadcast_request_sent = True
                 for usr in active_users:
-                    if active_users.index(usr) != drawer_id:
+                    if active_users.index(usr) != gameLogic.get_drawer_id():
                         reply_msg = json.dumps(
                             {'code': ApplicationCode.BROADCASE_IMAGE_REQUEST,
-                             'num_pkgs': num_of_packages})
+                             'num_pkgs': total_num_pkgs})
                         send_reply_msg(usr, reply_msg)
                     else:
                         reply_msg = json.dumps({
                             'code': ApplicationCode.IMAGE_RECEIVED,
                             'role': Role.Guesser,
-                            'players_dict': create_players_dict(),
+                            'players_dict': gameLogic.get_players_dict()
                         })
                         send_reply_msg(usr, reply_msg)
 
+                gameLogic.broadcast_request_sent()
+
             # Set a timeout to wait for all packages to be sent
-            if not package_wait_timeout_started:
-                package_wait_timeout_started = True
+            if not gameLogic.if_package_wait_timeout_started():
                 timer = Timer(SystemConst.WAIT_IMAGE_TIMEOUT,
                               image_send_checkup, (user, ))
                 timer.start()
+                gameLogic.package_wait_timeout_started()
 
         if received_msg['code'] == ApplicationCode.READY_TO_BROADCAST_IMAGE:
             broadcast_image(user)
 
         if received_msg['code'] == ApplicationCode.BROADCAST_IMAGE_PACKAGES_LOSS:
             broadcast_image(user)
-
-        if received_msg['code'] == ApplicationCode.BROADCAST_IMAGE_RECEIVED:
-            # TODO Implement Guesser Logic
-            pass
         #
 
-        # BROADCAST GUESSER ANSWER
+        # BROADCAST GUESSER MESSAGE
         if received_msg['code'] == ApplicationCode.SEND_ANSWER:
+            gameLogic.set_guesser_time_left(received_msg['time_left'])
             reply_json = received_msg
+
             reply_json['code'] = ApplicationCode.BROADCAST_ANSWER
 
             reply_msg = json.dumps(reply_json)
@@ -203,11 +199,56 @@ def handle_request(user: User):
 
             # Check if answer contains the keyword
             answer = reply_json['message']
-            if check_answer(answer):
+            if gameLogic.check_answer(answer):
+                scores_earned = gameLogic.calculate_score_earned()
+                drawer_score_earned = scores_earned['drawer']
+                guesser_score_earned = scores_earned['guesser']
+
+                gameLogic.add_player_score(
+                    gameLogic.get_drawer_name(), drawer_score_earned)
+                gameLogic.add_player_score(
+                    user.get_username(), guesser_score_earned)
+
                 reply_msg = json.dumps({'code': ApplicationCode.RIGHT_GUESS_FOUND,
-                                        'username': user.get_username()})
+                                        'keyword': gameLogic.get_keyword(),
+                                        'right_guesser': user.get_username(),
+                                        'scores_earned': scores_earned,
+                                        'players_dict': gameLogic.get_players_dict()})
                 for usr in active_users:
                     send_reply_msg(usr, reply_msg)
+
+                # Reset round
+                gameLogic.reset_round()
+                drawer_id = gameLogic.appoint_drawer()
+                print(f"Drawer's index: {drawer_id}")
+                gameLogic.set_drawer_name(
+                    active_users[drawer_id].get_username())
+
+                # Drawer's reply message
+                reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
+                                        'role': Role.Drawer,
+                                       'keyword': gameLogic.generate_keyword()})
+                send_reply_msg(active_users[drawer_id], reply_msg)
+                #
+
+                # Guesser's reply message
+                reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
+                                        'role': Role.Guesser,
+                                        'players_dict': gameLogic.get_players_dict(),
+                                        'drawer_name': active_users[drawer_id].get_username(),
+                                        'obc_keyword': gameLogic.generate_obscurd_keyword()})
+                for usr in active_users:
+                    if active_users.index(usr) != drawer_id:
+                        send_reply_msg(usr, reply_msg)
+        #
+
+        # GIVE HINT
+        if received_msg['code'] == ApplicationCode.REQUEST_HINT:
+            hinted_keyword = gameLogic.get_hinted_keyword()
+
+            reply_msg = json.dumps({'code': ApplicationCode.GIVE_HINT,
+                                    'hinted_keyword': hinted_keyword})
+            send_reply_msg(user, reply_msg)
         #
 
         # LOGOUT
@@ -238,40 +279,24 @@ def login_authenticate(user: User, username: str, password: str):
     return ApplicationCode.LOGIN_SUCCESS
 
 
-def create_players_dict():
-    players_dict = {}
-    for user in active_users:
-        players_dict[user.get_username()] = str(user.get_score())
-    return players_dict
-
-
 def image_send_checkup(user):
     # Check if all image packages have been received, send a failure message if not
 
-    global image_pkgs
-    global num_of_packages
-
-    if len(image_pkgs) != num_of_packages:
+    if not gameLogic.if_all_image_pkgs_received():
         reply_msg = json.dumps(
             {'code': ApplicationCode.IMAGE_PACKAGES_LOSS})
         send_reply_msg(user, reply_msg)
 
 
 def broadcast_image(user):
-    global image_pkgs
+    image_pkgs = gameLogic.get_image_pkg()
+
     for package in image_pkgs:
         reply_msg = json.dumps({
             'code': ApplicationCode.BROADCAST_IMAGE,
             'image': package
         })
         send_reply_msg(user, reply_msg)
-
-
-def check_answer(answer):
-    global keyword
-    if keyword in answer:
-        print("Right answer found!")
-        return True
 
 
 def logout(user: User):
@@ -300,7 +325,8 @@ def send_reply_msg(user: User, message: str):
 
     print('Reply message sent to',
           user.get_connection().getpeername(), ':', message)
-    user.get_connection().sendall(str.encode(message))
+    user.get_connection().send(str.encode(message))
+    time.sleep(SystemConst.TIME_BETWEEN_REQUEST)
 
 
 def main():
@@ -313,8 +339,8 @@ def main():
                                            'logged-in': False} for row in reader}
         f.close()
 
-    HOST = "127.0.0.1"
-    PORT = 5555
+    HOST = SystemConst.HOST
+    PORT = SystemConst.PORT
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -328,6 +354,9 @@ def main():
     # only listens for a maximum of MAX_PLAYER connections
     s.listen(SystemConst.MAX_PLAYERS)
     print("Socket is listening on port", PORT)
+
+    global gameLogic
+    gameLogic = GameLogic()
 
     while True:
         try:
