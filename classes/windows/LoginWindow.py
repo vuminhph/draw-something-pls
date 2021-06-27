@@ -5,7 +5,6 @@ import classes.Timer
 import classes.GUI
 
 from tkinter import *
-from tkinter import messagebox
 import time
 
 

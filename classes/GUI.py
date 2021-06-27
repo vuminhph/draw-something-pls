@@ -6,6 +6,7 @@ from classes.GameController import GameController
 from classes.enums.ApplicationCode import ApplicationCode
 from classes.enums.Role import Role
 from classes.Timer import Duration
+from classes.windows.FirstWindow import FirstWindow
 
 import Paint.paint  # For demo
 
@@ -37,7 +38,8 @@ class GUI:
         self.__username = username
 
     def display_login_window(self):
-        LoginWindow(self)
+        # LoginWindow(self)
+        FirstWindow(self)
 
     def display_waiting_window(self):
         WaitingWindow(self)
