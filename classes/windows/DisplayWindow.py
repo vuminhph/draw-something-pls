@@ -14,3 +14,6 @@ class DisplayWindow:
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self._window.destroy()
             self._GUI.get_game_window().destroy()
+
+    def _close(self):
+        self._window.destroy()

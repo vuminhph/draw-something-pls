@@ -46,16 +46,10 @@ class FirstWindow(DisplayWindow):
         frame = self.frames[cont]
         frame.tkraise()
 
-    def __go_ahead(self, username: str):
-        # If login is successful, then destroy login window to the next window
-        self._window.destroy()
-        time.sleep(1)
-        self._GUI.set_username(username)
-        self._GUI.display_waiting_window()
-
 class HomePage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
-        super(DisplayWindow, self).__init__(GUI)
+        super(HomePage, self).__init__(GUI)
+        super(HomePage, self)._close()
         Frame.__init__(self, parent)
 
         # Logo
@@ -84,7 +78,8 @@ class HomePage(DisplayWindow, Frame):
 
 class RulePage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
-        super(DisplayWindow, self).__init__(GUI)
+        super(RulePage, self).__init__(GUI)
+        super(RulePage, self)._close()
         Frame.__init__(self, parent)
 
         # Label
@@ -132,7 +127,8 @@ the guesser. If no one can answer correctly, everybody gets 0 point.\n
 
 class LoginPage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
-        super(DisplayWindow, self).__init__(GUI)
+        super(LoginPage, self).__init__(GUI)
+        super(LoginPage, self)._close()
         Frame.__init__(self, parent)
 
         # Logo
@@ -219,7 +215,7 @@ class LoginPage(DisplayWindow, Frame):
         is_login_success = self._game_controller.login(username, password)
 
         if is_login_success:
-            controller.__go_ahead(username)
+            self.__go_ahead(username, controller)
         else:
             # Display error message
             label_error = Label(self,
@@ -232,5 +228,12 @@ class LoginPage(DisplayWindow, Frame):
                               relwidth=0.45,
                               relx=0.5,
                               rely=0.7)
+
+    def __go_ahead(self, username: str, controller):
+        # If login is successful, then destroy login window to the next window
+        controller._window.destroy()
+        time.sleep(1)
+        self._GUI.set_username(username)
+        self._GUI.display_waiting_window()
 
 # app = FirstWindow()
