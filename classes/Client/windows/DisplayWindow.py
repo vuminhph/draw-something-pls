@@ -19,3 +19,6 @@ class DisplayWindow:
 
     def __del__(self):
         print("Window is destroyed")
+
+    def _close(self):
+        self._window.destroy()

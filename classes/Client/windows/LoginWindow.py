@@ -2,7 +2,6 @@ from classes.Client.windows.DisplayWindow import DisplayWindow
 import classes.Client.GUI
 
 from tkinter import *
-from tkinter import messagebox
 import time
 
 
