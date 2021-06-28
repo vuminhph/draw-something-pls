@@ -172,9 +172,9 @@ class PaintWindow(DisplayWindow):
             img = Image.open(io.BytesIO(ps.encode('utf-8')))
             img.save(image_path)
 
-        players = self._game_controller.send_image(
-            self._GUI.get_username(), self.__clock)
         drawer_name = self._GUI.get_username()
+        players = self._game_controller.send_image(
+            drawer_name, self.__clock)
 
         if players:
             self._window.destroy()

@@ -25,6 +25,8 @@ class GUI:
         self.__game_window = Tk()
         self.__game_window.withdraw()
 
+        self.__guesser_window = self.__drawer_window = None
+
         self.display_login_window()
 
     def get_game_controller(self):
@@ -46,10 +48,12 @@ class GUI:
         WaitingWindow(self)
 
     def display_game_window(self, reply_msg):
+        self.del_windows()
+
         if reply_msg['role'] == Role.Drawer:
             print('You have been assigned the role of Drawer')
             keyword = reply_msg['keyword']
-            self.__display_drawer_window(keyword)
+            self.display_drawer_window(keyword)
 
         elif reply_msg['role'] == Role.Guesser:
             print('You have been assigned the role of Guesser')
@@ -57,20 +61,26 @@ class GUI:
             drawer_name = reply_msg['drawer_name']
             obc_keyword = reply_msg['obc_keyword']
 
-            self.__display_guesser_window(
+            self.display_guesser_window(
                 self.__username, players, drawer_name, obc_keyword)
-        self.__game_controller.reset_round()
 
-    def __display_guesser_window(self, username, players, drawer_name, obc_keyword):
-        window = GuesserWindow(self, username, players,
-                               drawer_name, obc_keyword)
-        window.start_mainloop()
+    def display_guesser_window(self, username, players, drawer_name, obc_keyword):
+        self.__guesser_window = GuesserWindow(self, username, players,
+                                              drawer_name, obc_keyword)
+        self.__guesser_window.start_mainloop()
 
     def display_guesser_window_from_drawer(self, players, drawer_name):
-        window = GuesserWindow(self, self.__username,
-                               players, drawer_name, is_drawer=True)
-        window.from_drawer_init()
-        window.start_mainloop()
+        self.__guesser_window = GuesserWindow(self, self.__username,
+                                              players, drawer_name, is_drawer=True)
+        self.__guesser_window.from_drawer_init()
 
-    def __display_drawer_window(self, keyword):
-        PaintWindow(self, keyword)
+    def display_drawer_window(self, keyword):
+        self.__drawer_window = PaintWindow(self, keyword)
+
+    def del_windows(self):
+        print("Windows: ", self.__guesser_window, self.__drawer_window)
+        del self.__drawer_window
+        del self.__guesser_window
+        self.__drawer_window = None
+        self.__guesser_window = None
+        print("Windows: ", self.__guesser_window, self.__drawer_window)

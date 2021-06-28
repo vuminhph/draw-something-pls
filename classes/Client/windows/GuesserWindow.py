@@ -2,6 +2,7 @@
 from classes.Client.windows.DisplayWindow import DisplayWindow
 import classes.Client.GUI
 from classes.enums.SystemConst import SystemConst
+from classes.enums.Role import Role
 from classes.enums.ApplicationCode import ApplicationCode
 
 from tkinter import *
@@ -201,7 +202,6 @@ class GuesserWindow(DisplayWindow):
         self.__chatRoom.see(END)
 
     def __display_game_message(self, message):
-        print("game message")
         self.__chatRoom.configure(state=NORMAL)
         self.__chatRoom.insert(END, message + '\n\n', "game_message")
         self.__chatRoom.tag_configure(
@@ -213,6 +213,8 @@ class GuesserWindow(DisplayWindow):
     def __guesser_listen(self):
         # Block input from player while waiting to receive image
         self.__disable_answering()
+        self.__display_game_message(
+            self.__drawer_name+" has been chosen as drawer")
         while True:
             request_reply = self._game_controller.guesser_listener(
                 self._GUI.get_username())
@@ -248,6 +250,7 @@ class GuesserWindow(DisplayWindow):
                     right_guesser + " earned " + str(scores_earned['guesser']) + " points")
                 self.__display_game_message(
                     self.__drawer_name + " earned " + str(scores_earned['drawer']) + " points")
+                self.__display_game_message("New round is starting...")
 
                 self.__stop_countdown()
                 reply_msg = self._game_controller.listen_for_role_assignment()
@@ -317,6 +320,5 @@ class GuesserWindow(DisplayWindow):
         self.__counting_down = False
 
     def __start_new_round(self, reply_msg):
-        print(reply_msg)
         self._window.destroy()
         self._GUI.display_game_window(reply_msg)

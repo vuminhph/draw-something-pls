@@ -76,6 +76,8 @@ class GameController:
 
         with open(image_path, "rb") as image:
             f = base64.b64encode(image.read()).decode('utf-8')
+            image.close()
+
             msg = {'code': ApplicationCode.SEND_IMAGE, 'image': ''}
             overhead = json.dumps(msg)
 
@@ -99,22 +101,26 @@ class GameController:
             self.__communicator.send_message(send_msg)
 
             # receive reply from server
+            print(f)
+            print(num_of_packages)
             reply_msg = self.__communicator.receive_message()
-            print(reply_msg)
-            print("ok")
 
             if reply_msg['code'] == ApplicationCode.READY_TO_RECEIVE_IMAGE:
+                print("ok")
                 self.__send_image_packages(f, num_of_packages)
                 print("Image sent")
 
-            # listen for receive status
-            reply_msg = self.__communicator.receive_message()
-            if reply_msg['code'] == ApplicationCode.IMAGE_RECEIVED:
-                image.close()
-                return reply_msg['players_dict']
-            elif reply_msg['code'] == ApplicationCode.IMAGE_PACKAGES_LOSS:
-                self.__send_image_packages(f, num_of_packages)
+                # listen for receive status
+                reply_msg = self.__communicator.receive_message()
+                if reply_msg['code'] == ApplicationCode.IMAGE_RECEIVED:
+                    return reply_msg['players_dict']
+                elif reply_msg['code'] == ApplicationCode.IMAGE_PACKAGES_LOSS:
+                    self.__send_image_packages(f, num_of_packages)
+                else:
+                    return False
+
             else:
+                print("couldn't happen")
                 return False
 
     def __send_image_packages(self, f, num_of_packages):

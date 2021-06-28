@@ -147,6 +147,7 @@ def handle_request(user: User):
         if received_msg['code'] == ApplicationCode.SEND_IMAGE:
             # image_pkgs.append(received_msg['image'])
             gameLogic.append_image_pkg(received_msg['image'])
+            print("package received")
 
             if gameLogic.if_all_image_pkgs_received() and not gameLogic.if_broadcast_request_sent():
                 print("All packages received")
@@ -297,6 +298,7 @@ def broadcast_image(user):
             'image': package
         })
         send_reply_msg(user, reply_msg)
+        print("payload packed")
 
 
 def logout(user: User):
