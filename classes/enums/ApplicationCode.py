@@ -36,6 +36,8 @@ class ApplicationCode():
     RIGHT_GUESS_FOUND = '341'
     REQUEST_HINT = '35'
     GIVE_HINT = '350'
+    GUESSER_TIME_OUT = '36'
+    TIME_OUT_ROUND_END = '360'
 
     # Logout code
     LOGOUT = '40'

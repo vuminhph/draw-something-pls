@@ -1,5 +1,6 @@
-from classes.windows.DisplayWindow import DisplayWindow
+from classes.Client.windows.DisplayWindow import DisplayWindow
 from tkinter import *
+
 
 class ResultWindow(DisplayWindow):
     def __init__(self, GUI):
@@ -12,8 +13,8 @@ class ResultWindow(DisplayWindow):
                                height=False)
         self._window.configure(width=500,
                                height=500)
-        
-        # Show results        
+
+        # Show results
         self.__results__label = Label(self._window,
                                       text="FINAL RESULTS",
                                       font=("Consolas", 30, "bold"))
@@ -40,11 +41,11 @@ class ResultWindow(DisplayWindow):
         self.__winner__announce.place(rely=0.85,
                                       relwidth=1,
                                       relheight=0.15)
-        
+
         # self._window.mainloop()
         # pass
 
-    def __get_final_result(self, gameWinner:str, scoreboard:dict):
+    def __get_final_result(self, gameWinner: str, scoreboard: dict):
         self.__results__dict.configure(state=NORMAL)
         for user in scoreboard.keys():
             score = scoreboard[user]
@@ -53,5 +54,6 @@ class ResultWindow(DisplayWindow):
 
         self.__winner.set("The winner is: " + gameWinner + "!")
         # pass
+
 
 result = ResultWindow()

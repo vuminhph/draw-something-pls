@@ -219,29 +219,29 @@ def handle_request(user: User):
                     send_reply_msg(usr, reply_msg)
 
                 # Reset round
-                gameLogic.reset_round()
-                drawer_id = gameLogic.appoint_drawer()
-                print(f"Drawer's index: {drawer_id}")
-                gameLogic.set_drawer_name(
-                    active_users[drawer_id].get_username())
+        #         gameLogic.reset_round()
+        #         drawer_id = gameLogic.appoint_drawer()
+        #         print(f"Drawer's index: {drawer_id}")
+        #         gameLogic.set_drawer_name(
+        #             active_users[drawer_id].get_username())
 
-                # Drawer's reply message
-                reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
-                                        'role': Role.Drawer,
-                                       'keyword': gameLogic.generate_keyword()})
-                send_reply_msg(active_users[drawer_id], reply_msg)
-                #
+        #         # Drawer's reply message
+        #         reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
+        #                                 'role': Role.Drawer,
+        #                                'keyword': gameLogic.generate_keyword()})
+        #         send_reply_msg(active_users[drawer_id], reply_msg)
+        #         #
 
-                # Guesser's reply message
-                reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
-                                        'role': Role.Guesser,
-                                        'players_dict': gameLogic.get_players_dict(),
-                                        'drawer_name': active_users[drawer_id].get_username(),
-                                        'obc_keyword': gameLogic.generate_obscurd_keyword()})
-                for usr in active_users:
-                    if active_users.index(usr) != drawer_id:
-                        send_reply_msg(usr, reply_msg)
-        #
+        #         # Guesser's reply message
+        #         reply_msg = json.dumps({'code': ApplicationCode.GAME_ASSIGN_ROLE,
+        #                                 'role': Role.Guesser,
+        #                                 'players_dict': gameLogic.get_players_dict(),
+        #                                 'drawer_name': active_users[drawer_id].get_username(),
+        #                                 'obc_keyword': gameLogic.generate_obscurd_keyword()})
+        #         for usr in active_users:
+        #             if active_users.index(usr) != drawer_id:
+        #                 send_reply_msg(usr, reply_msg)
+        # #
 
         # GIVE HINT
         if received_msg['code'] == ApplicationCode.REQUEST_HINT:
@@ -251,6 +251,15 @@ def handle_request(user: User):
                                     'hinted_keyword': hinted_keyword})
             send_reply_msg(user, reply_msg)
         #
+
+        if received_msg['code'] == ApplicationCode.GUESSER_TIME_OUT:
+            reply_msg = json.dumps(
+                {'code': ApplicationCode.TIME_OUT_ROUND_END,
+                 'keyword': gameLogic.get_keyword()})
+            if not gameLogic.if_time_out_replied():
+                gameLogic.timeout_replied()
+                for usr in active_users:
+                    send_reply_msg(usr, reply_msg)
 
         # LOGOUT
         if received_msg['code'] == ApplicationCode.LOGOUT:

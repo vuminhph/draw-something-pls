@@ -189,6 +189,8 @@ class GameController:
             return (ApplicationCode.RIGHT_GUESS_FOUND, reply_msg)
         elif reply_msg['code'] == ApplicationCode.GIVE_HINT:
             return (ApplicationCode.GIVE_HINT, reply_msg['hinted_keyword'])
+        elif reply_msg['code'] == ApplicationCode.TIME_OUT_ROUND_END:
+            return (ApplicationCode.TIME_OUT_ROUND_END, reply_msg['keyword'])
         elif reply_msg['code'] == ApplicationCode.GAME_ASSIGN_ROLE:
             return (ApplicationCode.GIVE_HINT, reply_msg)
         else:
@@ -244,6 +246,10 @@ class GameController:
     def request_hint(self):
         # Request server for a hint
         send_msg = json.dumps({'code': ApplicationCode.REQUEST_HINT})
+        self.__communicator.send_message(send_msg)
+
+    def guesser_time_out(self):
+        send_msg = json.dumps({'code': ApplicationCode.GUESSER_TIME_OUT})
         self.__communicator.send_message(send_msg)
 
     def reset_round(self):

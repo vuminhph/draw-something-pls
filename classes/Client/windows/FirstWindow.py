@@ -2,14 +2,14 @@ from tkinter import *
 from tkinter.scrolledtext import ScrolledText
 import time
 
-from classes.windows.DisplayWindow import DisplayWindow
+from classes.Client.windows.DisplayWindow import DisplayWindow
 import classes.enums.ApplicationCode
 import classes.enums.Role
-import classes.Timer
-import classes.GUI
+import classes.Client.GUI
 
 FONT = ("Consolas", 20)
 LOGO = './images/DSL_logo.png'
+
 
 class FirstWindow(DisplayWindow):
     def __init__(self, GUI):
@@ -20,7 +20,7 @@ class FirstWindow(DisplayWindow):
 
         # creating a container
         container = Frame(self._window)
-        container.pack(side = "top", fill = "both", expand = True)
+        container.pack(side="top", fill="both", expand=True)
 
         # initializing frames to an empty array
         self.frames = {}
@@ -36,7 +36,7 @@ class FirstWindow(DisplayWindow):
             # home page, login page, rule page respectively with for loop
             self.frames[F] = frame
 
-            frame.grid(row = 0, column = 0, sticky ="nsew")
+            frame.grid(row=0, column=0, sticky="nsew")
 
         self.show_frame(HomePage)
         self._window.mainloop()
@@ -45,6 +45,7 @@ class FirstWindow(DisplayWindow):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+
 
 class HomePage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
@@ -62,7 +63,7 @@ class HomePage(DisplayWindow, Frame):
 
         # Login button
         self.__login_btn = Button(self, text="Log in", font=FONT, cursor="hand2", bg="#126E82", fg="white", borderwidth=3,
-                                  command = lambda : controller.show_frame(LoginPage))
+                                  command=lambda: controller.show_frame(LoginPage))
 
         self.__login_btn.place(relwidth=0.2,
                                relx=0.4,
@@ -70,11 +71,12 @@ class HomePage(DisplayWindow, Frame):
 
         # Game rule button
         self.__rule_btn = Button(self, text="Game Rule", font=FONT, cursor="hand2", bg="#51C4D3", borderwidth=3,
-                                 command = lambda : controller.show_frame(RulePage))
+                                 command=lambda: controller.show_frame(RulePage))
 
         self.__rule_btn.place(relwidth=0.2,
                               relx=0.4,
                               rely=0.75)
+
 
 class RulePage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
@@ -84,8 +86,8 @@ class RulePage(DisplayWindow, Frame):
 
         # Label
         self.__rule_label = Label(self,
-                                  text ="Game Rule",
-                                  font = "Consolas 40 bold",
+                                  text="Game Rule",
+                                  font="Consolas 40 bold",
                                   fg="#126E82",
                                   justify=CENTER)
         self.__rule_label.place(relheight=0.15,
@@ -97,7 +99,7 @@ class RulePage(DisplayWindow, Frame):
                                    font="Consolas 16",
                                    wrap=WORD)
         self.__rule.insert(INSERT,
-            """\
+                           """\
 • In a game, players are assigned to a role of either drawer or guesser.\n
 • The drawer is given a word or phrase. He will have some time to make a drawing \
 that illustrate to others what the word or phrase is.\n
@@ -109,7 +111,7 @@ to the time he took to answer. The drawer is also rewarded higher points than \
 the guesser. If no one can answer correctly, everybody gets 0 point.\n
 • When all players have already taken the role of drawer, the player with the highest score wins.\
             """
-        )
+                           )
         self.__rule.configure(state=DISABLED)
         self.__rule.place(relheight=0.7,
                           relwidth=0.9,
@@ -118,12 +120,13 @@ the guesser. If no one can answer correctly, everybody gets 0 point.\n
 
         # Return home page
         self.__back_btn = Button(self, text="<", font="Consolas 40", cursor="hand2", relief=FLAT,
-                                 command = lambda : controller.show_frame(HomePage))
+                                 command=lambda: controller.show_frame(HomePage))
 
         self.__back_btn.place(relwidth=0.05,
                               relheight=0.1,
                               relx=0.01,
-                              rely=0.02)        
+                              rely=0.02)
+
 
 class LoginPage(DisplayWindow, Frame):
     def __init__(self, parent, controller, GUI):
@@ -187,8 +190,8 @@ class LoginPage(DisplayWindow, Frame):
                                     rely=0.5)
 
         # Log in continue
-        self.__log_in_btn = Button(self, text ="CONTINUE", font = FONT, cursor="hand2", bg="#51C4D3", borderwidth=3,
-                                   command = lambda: self.__login(controller))
+        self.__log_in_btn = Button(self, text="CONTINUE", font=FONT, cursor="hand2", bg="#51C4D3", borderwidth=3,
+                                   command=lambda: self.__login(controller))
 
         self.__log_in_btn.place(relwidth=0.2,
                                 relx=0.7,
@@ -199,12 +202,15 @@ class LoginPage(DisplayWindow, Frame):
 
         # Return home page
         self.__back_btn = Button(self, text="<", font="Consolas 40", cursor="hand2", relief=FLAT,
-                                 command = lambda: controller.show_frame(HomePage))
+                                 command=lambda: controller.show_frame(HomePage))
 
         self.__back_btn.place(relwidth=0.05,
                               relheight=0.1,
                               relx=0.01,
                               rely=0.02)
+        # Press Enter to log in
+        # self._window.bind('<Return>', lambda e: self.__login(controller))
+        # self._window.mainloop()
 
     def __login(self, controller):
         # Send a login request to the server and check if login is successful

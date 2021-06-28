@@ -17,7 +17,7 @@ class LoginWindow(DisplayWindow):
                                height=300)
         # create login request Label
         label_instruct = Label(self._window,
-                               text="Please login to continue",
+                               text="Login to continue",
                                justify=CENTER,
                                font="Helvetica 14 bold")
 

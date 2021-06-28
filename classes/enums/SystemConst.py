@@ -8,10 +8,10 @@ class SystemConst():
     TIME_BETWEEN_REQUEST = 0.25
     WAITING_FOR_PLAYERS = 15
     WAIT_IMAGE_TIMEOUT = 5
-    DRAWING_TIME = 30
+    DRAWING_TIME = 60
     DRAWING_WARM_UP_TIME = 5
-    GUESSING_TIME = 30
-    HINT_TIME = 15
+    GUESSING_TIME = 60
+    HINT_TIME = 30
 
     # Game settings
     MAX_PLAYERS = 5

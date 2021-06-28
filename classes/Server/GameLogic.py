@@ -28,6 +28,8 @@ class GameLogic():
         self.__is_broadcast_request_sent = False  # TODO: reset every round
         self.__image_pkgs = []  # TODO: reset every round
 
+        self.__is_timeout_replied = False
+
     def if_drawer_appointed(self):
         return self.__is_drawer_appointed
 
@@ -151,6 +153,8 @@ class GameLogic():
         self.__is_broadcast_request_sent = False
         self.__image_pkgs = []
 
+        self.__is_timeout_replied = False
+
     # IMAGE SENDING LOGIC
     def append_image_pkg(self, package):
         self.__image_pkgs.append(package)
@@ -185,3 +189,9 @@ class GameLogic():
 
         return num_pkgs_received == self.__total_num_of_pkgs
     #
+
+    def if_time_out_replied(self):
+        return self.__is_timeout_replied
+
+    def timeout_replied(self):
+        self.__is_timeout_replied = True

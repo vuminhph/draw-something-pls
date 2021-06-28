@@ -247,14 +247,25 @@ class GuesserWindow(DisplayWindow):
                 self.__display_game_message(
                     right_guesser + " made the right guess!")
                 self.__display_game_message(
-                    right_guesser + " earned " + str(scores_earned['guesser']) + " points")
+                    right_guesser + " earn " + str(scores_earned['guesser']) + " points")
                 self.__display_game_message(
-                    self.__drawer_name + " earned " + str(scores_earned['drawer']) + " points")
-                self.__display_game_message("New round is starting...")
+                    self.__drawer_name + " earn " + str(scores_earned['drawer']) + " points")
+                # self.__display_game_message("New round is starting...")
 
                 self.__stop_countdown()
-                reply_msg = self._game_controller.listen_for_role_assignment()
-                self._window.after(5000, self.__start_new_round, reply_msg)
+                # reply_msg = self._game_controller.listen_for_role_assignment()
+                # self._window.after(5000, self.__start_new_round, reply_msg)
+                self._window.after(15000, self.__end_game)
+
+            elif reply_code == ApplicationCode.TIME_OUT_ROUND_END:
+                keyword = request_reply[1]
+                self.__display_header(keyword)
+                self.__display_game_message("Time out. No one earn any points")
+
+                self.__stop_countdown()
+                # reply_msg = self._game_controller.listen_for_role_assignment()
+                # self._window.after(5000, self.__start_new_round, reply_msg)
+                self._window.after(15000, self.__end_game)
 
     def __start_guessing(self):
         cur_dir = os.getcwd()
@@ -312,9 +323,10 @@ class GuesserWindow(DisplayWindow):
             if self.__clock == SystemConst.HINT_TIME:
                 print("Request hint")
                 self._game_controller.request_hint()
-        else:
-            pass
-            # TODO: Send guessing timeout request
+        elif self.__clock <= 0:
+            print("Time out")
+            if self.__is_drawer:
+                self._game_controller.guesser_time_out()
 
     def __stop_countdown(self):
         self.__counting_down = False
@@ -322,3 +334,8 @@ class GuesserWindow(DisplayWindow):
     def __start_new_round(self, reply_msg):
         self._window.destroy()
         self._GUI.display_game_window(reply_msg)
+
+    def __end_game(self):
+        self._game_controller.logout()
+        self._window.destroy()
+        self._GUI.get_game_window().destroy()
